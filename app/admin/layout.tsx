@@ -91,7 +91,7 @@ export default function AdminLayout({
             <div className="px-3 py-2 flex-1">
               <div className="flex items-center pl-3 mb-10">
                 <h1 className="text-2xl ">
-                  Vatenflow{" "}
+                  Vattenflow{" "}
                   <Badge variant="destructive" className="ml-2">
                     Admin
                   </Badge>

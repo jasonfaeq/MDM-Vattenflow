@@ -1,12 +1,12 @@
-Okay, this is a great project proposal! It clearly outlines the problem, the proposed solution, and the benefits. Let's create a detailed set of instructions for an AI agent to build the "MDM – Vatenflow" platform based on your brother's requirements.
+Okay, this is a great project proposal! It clearly outlines the problem, the proposed solution, and the benefits. Let's create a detailed set of instructions for an AI agent to build the "MDM – Vattenflow" platform based on your brother's requirements.
 
 The agent should assume the Next.js (App Router) project is already initialized, `pnpm` is the package manager, and Shadcn/ui is configured to install components into `components/ui/`. The `project_req.md` file (containing the text you provided) is in the project root.
 
 ---
 
-**AI Agent Instructions: Building MDM – Vatenflow**
+**AI Agent Instructions: Building MDM – Vattenflow**
 
-**Objective:** Develop a web application named "MDM – Vatenflow" to replace the current manual, email/Excel-based Master Data Management request process at Vattenfall Wind BU. The platform will allow Controllers to submit validated requests and track their status, while providing the MDM Team with an admin interface for management and processing.
+**Objective:** Develop a web application named "MDM – Vattenflow" to replace the current manual, email/Excel-based Master Data Management request process at Vattenfall Wind BU. The platform will allow Controllers to submit validated requests and track their status, while providing the MDM Team with an admin interface for management and processing.
 
 **Core Technologies:**
 
@@ -223,4 +223,4 @@ The agent should assume the Next.js (App Router) project is already initialized,
 
 ---
 
-This detailed plan should provide the AI agent with a clear roadmap to build the MDM – Vatenflow platform. Good luck with the project!
+This detailed plan should provide the AI agent with a clear roadmap to build the MDM – Vattenflow platform. Good luck with the project!

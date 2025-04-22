@@ -56,13 +56,13 @@ const tableStyles = {
 } as const;
 
 const baseWBSSchema = z.object({
-  controllingArea: z.string().min(1, "Controlling Area is required"),
-  companyCode: z.string().min(1, "Company Code is required"),
-  projectName: z.string().min(1, "Project Name is required"),
-  projectDefinition: z.string().min(1, "Project Definition is required"),
+  controllingArea: z.string().min(1, "Required"),
+  companyCode: z.string().min(1, "Required"),
+  projectName: z.string().min(1, "Required"),
+  projectDefinition: z.string().min(1, "Required"),
   level: z.string().optional(),
   responsiblePCCC: z.string()
-    .min(1, "Responsible PC/CC is required")
+    .min(1, "Required")
     .regex(/^\d{8}$/, "Responsible PC/CC must be exactly 8 digits"),
   planningElement: z.boolean().optional(),
   rubricElement: z.boolean().optional(),
@@ -93,6 +93,109 @@ interface WBSFormProps {
   region: Region;
   onSubmit: (data: WBSFormData[]) => Promise<void>;
 }
+
+type RegionType = "DE" | "NL" | "SE" | "PL";
+
+const getControllingAreaOptions = (region: RegionType) => {
+  switch (region) {
+    case "DE":
+      return [
+        { value: "1000", label: "1000 Berlin Manufacturing" },
+        { value: "1100", label: "1100 Hamburg Logistics" },
+        { value: "1200", label: "1200 Munich Electronics" },
+        { value: "1300", label: "1300 Frankfurt Services" },
+        { value: "1400", label: "1400 Stuttgart Research" },
+      ];
+    case "NL":
+      return [
+        { value: "2000", label: "2000 Amsterdam Tech" },
+        { value: "2100", label: "2100 Rotterdam Port" },
+        { value: "2200", label: "2200 Eindhoven Innovation" },
+        { value: "2300", label: "2300 Utrecht Digital" },
+        { value: "2400", label: "2400 Groningen Energy" },
+      ];
+    case "SE":
+      return [
+        { value: "3000", label: "3000 Stockholm Solutions" },
+        { value: "3100", label: "3100 Gothenburg Marine" },
+        { value: "3200", label: "3200 Malmö Industries" },
+        { value: "3300", label: "3300 Uppsala Research" },
+        { value: "3400", label: "3400 Västerås Power" },
+      ];
+    case "PL":
+      return [
+        { value: "4000", label: "4000 Warsaw Systems" },
+        { value: "4100", label: "4100 Krakow Development" },
+        { value: "4200", label: "4200 Wrocław Engineering" },
+        { value: "4300", label: "4300 Poznań Analytics" },
+        { value: "4400", label: "4400 Gdańsk Maritime" },
+      ];
+    default:
+      return [];
+  }
+};
+
+const getFunctionalAreaOptions = (region: RegionType) => {
+  switch (region) {
+    case "DE":
+      return [
+        { value: "1001", label: "Production" },
+        { value: "1002", label: "Quality Control" },
+        { value: "1003", label: "Maintenance" },
+      ];
+    case "NL":
+      return [
+        { value: "2001", label: "Research" },
+        { value: "2002", label: "Development" },
+        { value: "2003", label: "Testing" },
+      ];
+    case "SE":
+      return [
+        { value: "3001", label: "Design" },
+        { value: "3002", label: "Innovation" },
+        { value: "3003", label: "Prototyping" },
+      ];
+    case "PL":
+      return [
+        { value: "4001", label: "Engineering" },
+        { value: "4002", label: "Analysis" },
+        { value: "4003", label: "Implementation" },
+      ];
+    default:
+      return [];
+  }
+};
+
+const getProjectSpecOptions = (region: RegionType) => {
+  switch (region) {
+    case "DE":
+      return [
+        { value: "DE_INV", label: "Industrial Investment" },
+        { value: "DE_RD", label: "Research & Development" },
+        { value: "DE_MAINT", label: "Industrial Maintenance" },
+      ];
+    case "NL":
+      return [
+        { value: "NL_TECH", label: "Technology Innovation" },
+        { value: "NL_GREEN", label: "Green Energy" },
+        { value: "NL_SMART", label: "Smart Solutions" },
+      ];
+    case "SE":
+      return [
+        { value: "SE_SUS", label: "Sustainable Projects" },
+        { value: "SE_DIG", label: "Digital Transformation" },
+        { value: "SE_INNOV", label: "Innovation Hub" },
+      ];
+    case "PL":
+      return [
+        { value: "PL_ENG", label: "Engineering Excellence" },
+        { value: "PL_AUTO", label: "Automation Systems" },
+        { value: "PL_IT", label: "IT Infrastructure" },
+      ];
+    default:
+      return [];
+  }
+};
 
 export default function WBSForm({ region, onSubmit }: WBSFormProps) {
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
@@ -134,6 +237,14 @@ export default function WBSForm({ region, onSubmit }: WBSFormProps) {
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "bulkWBS",
+  });
+
+  const watchFieldArray = form.watch("bulkWBS");
+  const controlledFields = fields.map((field, index) => {
+    return {
+      ...field,
+      ...watchFieldArray[index],
+    };
   });
 
   const handleSubmit = async (values: FormValues) => {
@@ -236,7 +347,10 @@ export default function WBSForm({ region, onSubmit }: WBSFormProps) {
     setSelectedFields([]);
   };
 
-  const renderWBSRow = (index: number, showSelect: boolean = true) => (
+  const renderWBSRow = (index: number, showSelect: boolean = true) => {
+    const rowType = form.watch(`bulkWBS.${index}.type`);
+    
+    return (
     <TableRow key={fields[index].id} className={selectedRows.includes(index) ? "bg-muted/50" : ""}>
       {showSelect && (
         <TableCell>
@@ -269,6 +383,7 @@ export default function WBSForm({ region, onSubmit }: WBSFormProps) {
           )}
         />
       </TableCell>
+      {/* Always visible fields */}
       <TableCell>
         <FormField
           control={form.control}
@@ -280,17 +395,12 @@ export default function WBSForm({ region, onSubmit }: WBSFormProps) {
                   {...field}
                   className="w-full p-2 border rounded"
                 >
-                  <option value="6000">6000 Vattenfall Holding</option>
-                  <option value="6010">6010 Waste</option>
-                  <option value="6017">6017 Holding Beteiligungen</option>
-                  <option value="6018">6018 Kernkraftwerke</option>
-                  <option value="6100">6100 Heat Beteiligungen</option>
-                  <option value="6200">6200 Service Unit</option>
-                  <option value="6204">6204 VASA</option>
-                  <option value="6205">6205 Windkraft GmbH</option>
-                  <option value="6250">6250 Distribution</option>
-                  <option value="6300">6300 Wärme AG</option>
-                  <option value="6500">6500 Sales</option>
+                  <option value="">Select Controlling Area</option>
+                  {getControllingAreaOptions(region as RegionType).map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               </FormControl>
               <FormMessage />
@@ -340,104 +450,25 @@ export default function WBSForm({ region, onSubmit }: WBSFormProps) {
           )}
         />
       </TableCell>
-      <TableCell>
-        <FormField
-          control={form.control}
-          name={`bulkWBS.${index}.level`}
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <select
-                  {...field}
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5">5</option>
-                </select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </TableCell>
-      <TableCell>
-        <FormField
-          control={form.control}
-          name={`bulkWBS.${index}.responsiblePCCC`}
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <Input {...field} placeholder="Responsible PC/CC" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </TableCell>
-      <TableCell>
-        <FormField
-          control={form.control}
-          name={`bulkWBS.${index}.planningElement`}
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </TableCell>
-      <TableCell>
-        <FormField
-          control={form.control}
-          name={`bulkWBS.${index}.rubricElement`}
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </TableCell>
-      <TableCell>
-        <FormField
-          control={form.control}
-          name={`bulkWBS.${index}.billingElement`}
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </TableCell>
-      {region === "NL" && (
+      {rowType === "New" && (
         <>
           <TableCell>
             <FormField
               control={form.control}
-              name={`bulkWBS.${index}.settlementRulePercent`}
+              name={`bulkWBS.${index}.level`}
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Input {...field} placeholder="Settlement rule %" />
+                    <select
+                      {...field}
+                      className="w-full p-2 border rounded"
+                    >
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                      <option value="4">4</option>
+                      <option value="5">5</option>
+                    </select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -447,11 +478,176 @@ export default function WBSForm({ region, onSubmit }: WBSFormProps) {
           <TableCell>
             <FormField
               control={form.control}
-              name={`bulkWBS.${index}.settlementRuleGoal`}
+              name={`bulkWBS.${index}.responsiblePCCC`}
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Input {...field} placeholder="Settlement rule goal" />
+                    <Input {...field} placeholder="Responsible PC/CC" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </TableCell>
+          <TableCell>
+            <FormField
+              control={form.control}
+              name={`bulkWBS.${index}.planningElement`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </TableCell>
+          <TableCell>
+            <FormField
+              control={form.control}
+              name={`bulkWBS.${index}.rubricElement`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </TableCell>
+          <TableCell>
+            <FormField
+              control={form.control}
+              name={`bulkWBS.${index}.billingElement`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </TableCell>
+          {region === "NL" && (
+            <>
+              <TableCell>
+                <FormField
+                  control={form.control}
+                  name={`bulkWBS.${index}.settlementRulePercent`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input {...field} placeholder="Settlement rule %" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </TableCell>
+              <TableCell>
+                <FormField
+                  control={form.control}
+                  name={`bulkWBS.${index}.settlementRuleGoal`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input {...field} placeholder="Settlement rule goal" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </TableCell>
+            </>
+          )}
+          <TableCell>
+            <FormField
+              control={form.control}
+              name={`bulkWBS.${index}.responsiblePerson`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input {...field} placeholder="Responsible person" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </TableCell>
+          <TableCell>
+            <FormField
+              control={form.control}
+              name={`bulkWBS.${index}.userId`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input {...field} placeholder="User ID" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </TableCell>
+          <TableCell>
+            <FormField
+              control={form.control}
+              name={`bulkWBS.${index}.employmentNumber`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input {...field} placeholder="Employment number" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </TableCell>
+          {region === "NL" && (
+            <TableCell>
+              <FormField
+                control={form.control}
+                name={`bulkWBS.${index}.functionalArea`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <select
+                        {...field}
+                        className="w-full p-2 border rounded"
+                      >
+                        <option value="">Select Functional Area</option>
+                        {getFunctionalAreaOptions(region as RegionType).map(option => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </TableCell>
+          )}
+          <TableCell>
+            <FormField
+              control={form.control}
+              name={`bulkWBS.${index}.tgPhase`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input {...field} placeholder="TG Phase" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -463,85 +659,6 @@ export default function WBSForm({ region, onSubmit }: WBSFormProps) {
       <TableCell>
         <FormField
           control={form.control}
-          name={`bulkWBS.${index}.responsiblePerson`}
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <Input {...field} placeholder="Responsible person" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </TableCell>
-      <TableCell>
-        <FormField
-          control={form.control}
-          name={`bulkWBS.${index}.userId`}
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <Input {...field} placeholder="User ID" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </TableCell>
-      <TableCell>
-        <FormField
-          control={form.control}
-          name={`bulkWBS.${index}.employmentNumber`}
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <Input {...field} placeholder="Employment number" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </TableCell>
-      {region === "NL" && (
-        <TableCell>
-          <FormField
-            control={form.control}
-            name={`bulkWBS.${index}.functionalArea`}
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <select
-                    {...field}
-                    className="w-full p-2 border rounded"
-                  >
-                    <option value="1000">1000</option>
-                    <option value="2000">2000</option>
-                    <option value="3000">3000</option>
-                  </select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </TableCell>
-      )}
-      <TableCell>
-        <FormField
-          control={form.control}
-          name={`bulkWBS.${index}.tgPhase`}
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <Input {...field} placeholder="TG Phase" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </TableCell>
-      <TableCell>
-        <FormField
-          control={form.control}
           name={`bulkWBS.${index}.projectSpec`}
           render={({ field }) => (
             <FormItem>
@@ -550,9 +667,12 @@ export default function WBSForm({ region, onSubmit }: WBSFormProps) {
                   {...field}
                   className="w-full p-2 border rounded"
                 >
-                  <option value="Investment">Investment</option>
-                  <option value="Maintenance">Maintenance</option>
-                  <option value="Research">Research</option>
+                  <option value="">Select Project Spec</option>
+                  {getProjectSpecOptions(region as RegionType).map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               </FormControl>
               <FormMessage />
@@ -589,7 +709,7 @@ export default function WBSForm({ region, onSubmit }: WBSFormProps) {
         />
       </TableCell>
     </TableRow>
-  );
+  )};
 
   return (
     <Form {...form}>
@@ -609,22 +729,26 @@ export default function WBSForm({ region, onSubmit }: WBSFormProps) {
                     <TableHead className={tableStyles.companyCode}>Company Code</TableHead>
                     <TableHead className={tableStyles.projectName}>Project Name</TableHead>
                     <TableHead className={tableStyles.projectDefinition}>Project Definition</TableHead>
-                    <TableHead className={tableStyles.level}>Level</TableHead>
-                    <TableHead className={tableStyles.responsiblePCCC}>Responsible PC/CC</TableHead>
-                    <TableHead className={tableStyles.checkbox3Col}>Planning Element</TableHead>
-                    <TableHead className={tableStyles.checkbox3Col}>Rubric Element</TableHead>
-                    <TableHead className={tableStyles.checkbox3Col}>Billing Element</TableHead>
-                    {region === "NL" && (
+                    {form.watch('bulkWBS.0.type') === "New" && (
                       <>
-                        <TableHead className={tableStyles.settlement}>Settlement Rule %</TableHead>
-                        <TableHead className={tableStyles.settlement}>Settlement Rule Goal</TableHead>
+                        <TableHead className={tableStyles.level}>Level</TableHead>
+                        <TableHead className={tableStyles.responsiblePCCC}>Responsible PC/CC</TableHead>
+                        <TableHead className={tableStyles.checkbox3Col}>Planning Element</TableHead>
+                        <TableHead className={tableStyles.checkbox3Col}>Rubric Element</TableHead>
+                        <TableHead className={tableStyles.checkbox3Col}>Billing Element</TableHead>
+                        {region === "NL" && (
+                          <>
+                            <TableHead className={tableStyles.settlement}>Settlement Rule %</TableHead>
+                            <TableHead className={tableStyles.settlement}>Settlement Rule Goal</TableHead>
+                          </>
+                        )}
+                        <TableHead className={tableStyles.person}>Responsible Person</TableHead>
+                        <TableHead className={tableStyles.person}>User ID</TableHead>
+                        <TableHead className={tableStyles.person}>Employment Number</TableHead>
+                        {region === "NL" && <TableHead className={tableStyles.functionalArea}>Functional Area</TableHead>}
+                        <TableHead className={tableStyles.tgPhase}>TG Phase</TableHead>
                       </>
                     )}
-                    <TableHead className={tableStyles.person}>Responsible Person</TableHead>
-                    <TableHead className={tableStyles.person}>User ID</TableHead>
-                    <TableHead className={tableStyles.person}>Employment Number</TableHead>
-                    {region === "NL" && <TableHead className={tableStyles.functionalArea}>Functional Area</TableHead>}
-                    <TableHead className={tableStyles.tgPhase}>TG Phase</TableHead>
                     <TableHead className={tableStyles.projectSpec}>Project Spec</TableHead>
                     <TableHead className={tableStyles.motherCode}>Mother Code</TableHead>
                     <TableHead className={tableStyles.comment}>Comment</TableHead>
@@ -666,8 +790,8 @@ export default function WBSForm({ region, onSubmit }: WBSFormProps) {
                                   .filter(({ field }) => 
                                     region === "NL" || !field.toString().startsWith("settlement")
                                   )
-                                  .map(({ field }) => field as keyof WBSFormData);
-                                    
+                                  .map(({ field }) => field);
+                                  
                                 if (selectedFields.length === availableFields.length) {
                                   setSelectedFields([]);
                                 } else {
@@ -753,22 +877,26 @@ export default function WBSForm({ region, onSubmit }: WBSFormProps) {
                         <TableHead className={tableStyles.companyCode}>Company Code</TableHead>
                         <TableHead className={tableStyles.projectName}>Project Name</TableHead>
                         <TableHead className={tableStyles.projectDefinition}>Project Definition</TableHead>
-                        <TableHead className={tableStyles.level}>Level</TableHead>
-                        <TableHead className={tableStyles.responsiblePCCC}>Responsible PC/CC</TableHead>
-                        <TableHead className={tableStyles.checkbox3Col}>Planning Element</TableHead>
-                        <TableHead className={tableStyles.checkbox3Col}>Rubric Element</TableHead>
-                        <TableHead className={tableStyles.checkbox3Col}>Billing Element</TableHead>
-                        {region === "NL" && (
+                        {controlledFields.some(field => field.type === "New") && (
                           <>
-                            <TableHead className={tableStyles.settlement}>Settlement Rule %</TableHead>
-                            <TableHead className={tableStyles.settlement}>Settlement Rule Goal</TableHead>
+                            <TableHead className={tableStyles.level}>Level</TableHead>
+                            <TableHead className={tableStyles.responsiblePCCC}>Responsible PC/CC</TableHead>
+                            <TableHead className={tableStyles.checkbox3Col}>Planning Element</TableHead>
+                            <TableHead className={tableStyles.checkbox3Col}>Rubric Element</TableHead>
+                            <TableHead className={tableStyles.checkbox3Col}>Billing Element</TableHead>
+                            {region === "NL" && (
+                              <>
+                                <TableHead className={tableStyles.settlement}>Settlement Rule %</TableHead>
+                                <TableHead className={tableStyles.settlement}>Settlement Rule Goal</TableHead>
+                              </>
+                            )}
+                            <TableHead className={tableStyles.person}>Responsible Person</TableHead>
+                            <TableHead className={tableStyles.person}>User ID</TableHead>
+                            <TableHead className={tableStyles.person}>Employment Number</TableHead>
+                            {region === "NL" && <TableHead className={tableStyles.functionalArea}>Functional Area</TableHead>}
+                            <TableHead className={tableStyles.tgPhase}>TG Phase</TableHead>
                           </>
                         )}
-                        <TableHead className={tableStyles.person}>Responsible Person</TableHead>
-                        <TableHead className={tableStyles.person}>User ID</TableHead>
-                        <TableHead className={tableStyles.person}>Employment Number</TableHead>
-                        {region === "NL" && <TableHead className={tableStyles.functionalArea}>Functional Area</TableHead>}
-                        <TableHead className={tableStyles.tgPhase}>TG Phase</TableHead>
                         <TableHead className={tableStyles.projectSpec}>Project Spec</TableHead>
                         <TableHead className={tableStyles.motherCode}>Mother Code</TableHead>
                         <TableHead className={tableStyles.comment}>Comment</TableHead>

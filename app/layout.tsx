@@ -8,7 +8,7 @@ import { ThemeProvider } from "next-themes";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "MDM Vatenflow",
+  title: "MDM Vattenflow",
   description: "Master Data Management Request System",
 };
 
