@@ -18,6 +18,13 @@ import {
   CCData,
   ModifyData,
   LockUnlockData,
+  SubmittedData,
+  StoredSubmittedData,
+  StoredWBSData,
+  StoredPCData,
+  StoredCCData,
+  StoredModifyData,
+  StoredLockUnlockData,
 } from "@/types";
 import {
   Card,
@@ -75,7 +82,7 @@ export default function RequestForm() {
     setStep(2);
   };
 
-  const submitRequest = async (submittedData: any) => {
+  const submitRequest = async (submittedData: SubmittedData) => {
     if (!user || !formValues) return;
 
     setIsSubmitting(true);
@@ -83,80 +90,39 @@ export default function RequestForm() {
       // Create request object
       const now = Timestamp.now();
 
-      // Handle both single and bulk submissions
-      if (Array.isArray(submittedData)) {
-        // For bulk submissions
-        const submissions = submittedData.map(async (itemData) => {
-          const request: Omit<Request, "id"> = {
-            requesterId: user.uid,
-            requesterEmail: user.email,
-            requestType: formValues.requestType,
-            region: formValues.region,
+      // Convert dates to Timestamps
+      const convertDates = (data: any) => ({
+        ...data,
+        startDate: data.startDate instanceof Date ? Timestamp.fromDate(data.startDate) : null,
+        endDate: data.endDate instanceof Date ? Timestamp.fromDate(data.endDate) : null,
+      });
+
+      const request: Omit<Request, "id"> = {
+        requesterId: user.uid,
+        requesterEmail: user.email,
+        requestType: formValues.requestType,
+        region: formValues.region,
+        status: "Submitted",
+        createdAt: now,
+        updatedAt: now,
+        submittedData: Array.isArray(submittedData) 
+          ? submittedData.map(convertDates)
+          : convertDates(submittedData),
+        comments: [],
+        internalComments: [],
+        history: [
+          {
+            timestamp: now,
             status: "Submitted",
-            createdAt: now,
-            updatedAt: now,
-            submittedData: {
-              ...itemData,
-              startDate: itemData.startDate
-                ? Timestamp.fromDate(itemData.startDate)
-                : null,
-              endDate: itemData.endDate
-                ? Timestamp.fromDate(itemData.endDate)
-                : null,
-            },
-            comments: [],
-            internalComments: [],
-            history: [
-              {
-                timestamp: now,
-                status: "Submitted",
-                changedByUserId: user.uid,
-                changedByUserName: user.displayName || user.email,
-              },
-            ],
-          };
-          return addDoc(collection(db, "requests"), request);
-        });
-
-        await Promise.all(submissions);
-        toast.success("Bulk request submitted successfully!");
-        router.push("/requests");
-      } else {
-        // For single submissions
-        const request: Omit<Request, "id"> = {
-          requesterId: user.uid,
-          requesterEmail: user.email,
-          requestType: formValues.requestType,
-          region: formValues.region,
-          status: "Submitted",
-          createdAt: now,
-          updatedAt: now,
-          submittedData: {
-            ...submittedData,
-            startDate: submittedData.startDate
-              ? Timestamp.fromDate(submittedData.startDate)
-              : null,
-            endDate: submittedData.endDate
-              ? Timestamp.fromDate(submittedData.endDate)
-              : null,
+            changedByUserId: user.uid,
+            changedByUserName: user.displayName || user.email,
           },
-          comments: [],
-          internalComments: [],
-          history: [
-            {
-              timestamp: now,
-              status: "Submitted",
-              changedByUserId: user.uid,
-              changedByUserName: user.displayName || user.email,
-            },
-          ],
-        };
+        ],
+      };
 
-        // Add to Firestore
-        const docRef = await addDoc(collection(db, "requests"), request);
-        toast.success("Request submitted successfully!");
-        router.push(`/requests/${docRef.id}`);
-      }
+      await addDoc(collection(db, "requests"), request);
+      toast.success("Request submitted successfully!");
+      router.push("/requests");
     } catch (error) {
       console.error("Error submitting request:", error);
       toast.error("Failed to submit request. Please try again.");
@@ -186,7 +152,7 @@ export default function RequestForm() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-7xl mx-auto">
       <Card>
         <CardHeader>
           <CardTitle>New MDM Request</CardTitle>
@@ -262,7 +228,9 @@ export default function RequestForm() {
                   />
                 </div>
 
-                <Button type="submit">Continue</Button>
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? "Submitting..." : "Submit Request"}
+                </Button>
               </form>
             </Form>
           ) : (

@@ -7,7 +7,7 @@ import { Plus, Trash2, CopyCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Region, WBSData } from "@/types";
+import { Region } from "@/types";
 import {
   Form,
   FormControl,
@@ -55,7 +55,6 @@ const tableStyles = {
   comment: "w-[200px] min-w-[200px]",
 } as const;
 
-// WBS schema based on the region
 const baseWBSSchema = z.object({
   controllingArea: z.string().min(1, "Controlling Area is required"),
   companyCode: z.string().min(1, "Company Code is required"),
@@ -80,42 +79,24 @@ const baseWBSSchema = z.object({
   comment: z.string().optional(),
   type: z.enum(["New", "Update", "Lock", "Unlock", "Close"]),
   region: z.string() as z.ZodType<Region>,
-}).refine(data => {
-  if (data.type === "New") {
-    return data.level && data.responsiblePCCC && /^\d{8}$/.test(data.responsiblePCCC);
-  }
-  return true;
-}, {
-  message: "Fields are required for 'New' process type",
-  path: ["bulkWBS"]
 });
 
-// Schema for bulk WBS
-const bulkWBSSchema = z.object({
-  isBulk: z.boolean().default(false),
-  region: z.string() as z.ZodType<Region>,
-  wbsItems: z.array(baseWBSSchema).min(1, "At least one WBS item is required"),
-});
-
-// Single WBS schema
-const singleWBSSchema = baseWBSSchema;
-
-// Combined schema that conditionally validates based on isBulk
 const formSchema = z.object({
   region: z.string() as z.ZodType<Region>,
   bulkWBS: z.array(baseWBSSchema).min(1, "At least one WBS item is required"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
+type WBSFormData = z.infer<typeof baseWBSSchema>;
 
 interface WBSFormProps {
   region: Region;
-  onSubmit: (data: WBSData[]) => Promise<void>;
+  onSubmit: (data: WBSFormData[]) => Promise<void>;
 }
 
 export default function WBSForm({ region, onSubmit }: WBSFormProps) {
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
-  const [selectedFields, setSelectedFields] = useState<(keyof WBSData)[]>([]);
+  const [selectedFields, setSelectedFields] = useState<(keyof WBSFormData)[]>([]);
   const [isMatchDialogOpen, setIsMatchDialogOpen] = useState(false);
 
   const form = useForm<FormValues>({
@@ -157,7 +138,7 @@ export default function WBSForm({ region, onSubmit }: WBSFormProps) {
 
   const handleSubmit = async (values: FormValues) => {
     try {
-      await onSubmit(values.bulkWBS as WBSData[]);
+      await onSubmit(values.bulkWBS as WBSFormData[]);
     } catch (error) {
       console.error("Error submitting WBS request:", error);
       throw error;
@@ -201,7 +182,7 @@ export default function WBSForm({ region, onSubmit }: WBSFormProps) {
     }
   };
 
-  const matchableFields: { field: keyof WBSData; label: string }[] = [
+  const matchableFields: { field: keyof WBSFormData; label: string }[] = [
     { field: "type", label: "Type" },
     { field: "controllingArea", label: "Controlling Area" },
     { field: "companyCode", label: "Company Code" },
@@ -222,7 +203,7 @@ export default function WBSForm({ region, onSubmit }: WBSFormProps) {
     { field: "comment", label: "Comment" },
   ];
 
-  const toggleField = (field: keyof WBSData) => {
+  const toggleField = (field: keyof WBSFormData) => {
     setSelectedFields(prev =>
       prev.includes(field)
         ? prev.filter(f => f !== field)
@@ -235,28 +216,15 @@ export default function WBSForm({ region, onSubmit }: WBSFormProps) {
     const currentValues = form.getValues().bulkWBS;
     
     const updatedBulkWBS = currentValues.map((item, index) => {
-      if (index === 0 || !selectedRows.includes(index)) return item; // Skip main WBS and unselected rows
+      if (index === 0 || !selectedRows.includes(index)) return item;
       
-      const updates = selectedFields.reduce((acc, field) => {
-        // Only copy string or boolean fields, and ensure they match the expected type
-        if (field === 'type' && typeof mainWBS[field] === 'string') {
-          (acc as any)[field] = mainWBS[field] as "New" | "Update" | "Lock" | "Unlock" | "Close";
-        } else if (
-          ['controllingArea', 'companyCode', 'projectName', 'projectDefinition', 'responsiblePCCC', 
-           'level', 'settlementRulePercent', 'settlementRuleGoal', 'responsiblePerson', 'userId',
-           'employmentNumber', 'functionalArea', 'tgPhase', 'projectSpec', 'motherCode', 'comment']
-          .includes(field) && typeof mainWBS[field] === 'string'
-        ) {
-          (acc as any)[field] = mainWBS[field];
-        } else if (
-          ['planningElement', 'rubricElement', 'billingElement']
-          .includes(field) && typeof mainWBS[field] === 'boolean'
-        ) {
-          (acc as any)[field] = mainWBS[field];
+      const updates = selectedFields.reduce<{ [K in keyof WBSFormData]?: WBSFormData[K] }>((acc, field) => {
+        const value = mainWBS[field];
+        if (value !== undefined && value !== null) {
+          acc[field] = value;
         }
         return acc;
-      }, {} as Partial<WBSData>);
-      
+      }, {}) as Partial<WBSFormData>;
       return {
         ...item,
         ...updates,
@@ -670,7 +638,7 @@ export default function WBSForm({ region, onSubmit }: WBSFormProps) {
 
             {fields.length > 1 && (
               <>
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex justify-between items-center mb-4 mt-12">
                   <h3 className="text-lg font-medium">Additional WBS Elements</h3>
                   <div className="flex gap-2">
                     <Dialog open={isMatchDialogOpen} onOpenChange={setIsMatchDialogOpen}>
@@ -687,24 +655,50 @@ export default function WBSForm({ region, onSubmit }: WBSFormProps) {
                         <DialogHeader>
                           <DialogTitle>Select Fields to Match</DialogTitle>
                         </DialogHeader>
-                        <div className="grid grid-cols-2 gap-4 py-4">
-                          {matchableFields.map(({ field, label }) => (
-                            region === "NL" || !field.toString().startsWith("settlement") ? (
-                              <div key={field} className="flex items-center space-x-2">
-                                <Checkbox
-                                  id={field}
-                                  checked={selectedFields.includes(field)}
-                                  onCheckedChange={() => toggleField(field)}
-                                />
-                                <label
-                                  htmlFor={field}
-                                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                >
-                                  {label}
-                                </label>
-                              </div>
-                            ) : null
-                          ))}
+                        <div className="flex flex-col gap-4 py-4">
+                          <div className="flex items-center space-x-2 border-b pb-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const availableFields = matchableFields
+                                  .filter(({ field }) => 
+                                    region === "NL" || !field.toString().startsWith("settlement")
+                                  )
+                                  .map(({ field }) => field as keyof WBSFormData);
+                                    
+                                if (selectedFields.length === availableFields.length) {
+                                  setSelectedFields([]);
+                                } else {
+                                  setSelectedFields(availableFields);
+                                }
+                              }}
+                            >
+                              {selectedFields.length === matchableFields.filter(({ field }) => 
+                                region === "NL" || !field.toString().startsWith("settlement")
+                              ).length ? "Deselect All" : "Select All"}
+                            </Button>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            {matchableFields.map(({ field, label }) => (
+                              region === "NL" || !field.toString().startsWith("settlement") ? (
+                                <div key={field} className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={field}
+                                    checked={selectedFields.includes(field)}
+                                    onCheckedChange={() => toggleField(field)}
+                                  />
+                                  <label
+                                    htmlFor={field}
+                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                  >
+                                    {label}
+                                  </label>
+                                </div>
+                              ) : null
+                            ))}
+                          </div>
                         </div>
                         <div className="flex justify-end space-x-2">
                           <Button

@@ -29,7 +29,19 @@ export interface HistoryEntry {
   changedByUserName: string;
 }
 
-export interface WBSData {
+export interface BaseRequestData {
+  startDate?: Date | null;
+  endDate?: Date | null;
+  region: Region;
+}
+
+export interface StoredBaseRequestData {
+  startDate?: Timestamp | null;
+  endDate?: Timestamp | null;
+  region: Region;
+}
+
+export interface WBSData extends BaseRequestData {
   type: "New" | "Update" | "Lock" | "Unlock" | "Close";
   controllingArea: string;
   companyCode: string;
@@ -50,49 +62,53 @@ export interface WBSData {
   projectSpec?: string;
   motherCode?: string;
   comment?: string;
-  region: Region;
 }
 
-export interface PCData {
-  // Define PC request fields
-  costCenter: string;
-  profitCenterName: string;
-  region: Region;
+export interface PCData extends BaseRequestData {
+  // Add PC specific fields
+  pcId: string;
+  description: string;
   // Add other fields as needed
 }
 
-export interface CCData {
-  // Define CC request fields
-  costCenterName: string;
-  region: Region;
+export interface CCData extends BaseRequestData {
+  // Add CC specific fields
+  ccId: string;
+  description: string;
   // Add other fields as needed
 }
 
-export interface ModifyData {
-  // Define Modify request fields
-  objectId: string;
+export interface ModifyData extends BaseRequestData {
   objectType: "WBS" | "PC" | "CC";
+  objectId: string;
   changes: string;
-  region: Region;
-  // Add other fields as needed
+  justification: string;
 }
 
-export interface LockUnlockData {
-  // Define Lock/Unlock request fields
-  objectId: string;
+export interface LockUnlockData extends BaseRequestData {
   objectType: "WBS" | "PC" | "CC";
-  reason: string;
-  region: Region;
-  // Add other fields as needed
+  objectId: string;
+  action: "Lock" | "Unlock";
+  justification: string;
 }
 
-export type SubmittedData =
-  | WBSData
-  | PCData
-  | CCData
-  | ModifyData
-  | LockUnlockData
-  | WBSData[]; // For bulk WBS submission
+export type StoredWBSData = Omit<WBSData, 'startDate' | 'endDate'> & StoredBaseRequestData;
+export type StoredPCData = Omit<PCData, 'startDate' | 'endDate'> & StoredBaseRequestData;
+export type StoredCCData = Omit<CCData, 'startDate' | 'endDate'> & StoredBaseRequestData;
+export type StoredModifyData = Omit<ModifyData, 'startDate' | 'endDate'> & StoredBaseRequestData;
+export type StoredLockUnlockData = Omit<LockUnlockData, 'startDate' | 'endDate'> & StoredBaseRequestData;
+
+export type SubmittedData = WBSData | WBSData[] | PCData | PCData[] | CCData | CCData[] | ModifyData | LockUnlockData;
+
+export type StoredSubmittedData = 
+  | StoredWBSData 
+  | StoredWBSData[] 
+  | StoredPCData 
+  | StoredPCData[] 
+  | StoredCCData 
+  | StoredCCData[] 
+  | StoredModifyData 
+  | StoredLockUnlockData;
 
 export interface User {
   uid: string;
@@ -102,7 +118,7 @@ export interface User {
 }
 
 export interface Request {
-  id?: string;
+  id: string;
   requesterId: string;
   requesterEmail: string;
   requestType: RequestType;
@@ -110,7 +126,7 @@ export interface Request {
   status: RequestStatus;
   createdAt: Timestamp;
   updatedAt: Timestamp;
-  submittedData: SubmittedData;
+  submittedData: StoredSubmittedData;
   comments: Comment[];
   internalComments: Comment[];
   history: HistoryEntry[];
