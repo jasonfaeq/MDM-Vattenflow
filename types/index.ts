@@ -131,3 +131,26 @@ export interface Request {
   internalComments: Comment[];
   history: HistoryEntry[];
 }
+
+export interface WBSElement {
+  type: string;
+  controllingArea: string;
+  companyCode: string;
+  projectName: string;
+  projectDefinition: string;
+  level: string;
+  responsiblePCCC: string;
+  planningElement?: boolean;
+  rubricElement?: boolean;
+  billingElement?: boolean;
+  settlementRulePercent?: string;
+  settlementRuleGoal?: string;
+  responsiblePerson?: string;
+  userId?: string;
+  employmentNumber?: string;
+  functionalArea?: string;
+  tgPhase?: string;
+  projectSpec?: string;
+  motherCode?: string;
+  comment?: string;
+}

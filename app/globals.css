@@ -45,78 +45,159 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.141 0.005 285.823);
+  /* Core brand colors */
+  --background: oklch(0.98 0.01 100);
+  --foreground: oklch(0.2 0.05 240); /* Vattenfall navy blue */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
+  --card-foreground: oklch(0.2 0.05 240);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.21 0.006 285.885);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.21 0.006 285.885);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.705 0.015 286.067);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-primary: oklch(0.21 0.006 285.885);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.705 0.015 286.067);
+  --popover-foreground: oklch(0.2 0.05 240);
+  --primary: oklch(0.25 0.1 240); /* Vattenfall navy blue */
+  --primary-foreground: oklch(0.98 0.01 100);
+  --secondary: oklch(0.85 0.15 85); /* Vattenfall yellow */
+  --secondary-foreground: oklch(0.2 0.05 240);
+  --muted: oklch(0.9 0.03 240);
+  --muted-foreground: oklch(0.45 0.05 240);
+  --accent: oklch(0.85 0.15 85); /* Vattenfall yellow */
+  --accent-foreground: oklch(0.2 0.05 240);
+  --destructive: oklch(0.7 0.2 30);
+  --border: oklch(0.9 0.03 240);
+  --input: oklch(0.9 0.03 240);
+  --ring: oklch(0.7 0.05 240);
+  /* Chart colors - using brand-aligned palette */
+  --chart-1: oklch(0.85 0.15 85); /* Vattenfall yellow */
+  --chart-2: oklch(0.25 0.1 240); /* Vattenfall blue */
+  --chart-3: oklch(0.6 0.1 240); /* Lighter blue */
+  --chart-4: oklch(0.75 0.1 85); /* Softer yellow */
+  --chart-5: oklch(0.4 0.1 240); /* Medium blue */
+  /* Sidebar */
+  --sidebar: oklch(0.25 0.1 240); /* Vattenfall blue */
+  --sidebar-foreground: oklch(1 0 0);
+  --sidebar-primary: oklch(0.85 0.15 85); /* Vattenfall yellow */
+  --sidebar-primary-foreground: oklch(0.2 0.05 240);
+  --sidebar-accent: oklch(0.85 0.15 85);
+  --sidebar-accent-foreground: oklch(0.2 0.05 240);
+  --sidebar-border: oklch(0.3 0.1 240);
+  --sidebar-ring: oklch(0.7 0.05 240);
 }
 
 .dark {
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.92 0.004 286.32);
-  --primary-foreground: oklch(0.21 0.006 285.885);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.552 0.016 285.938);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.552 0.016 285.938);
+  /* Dark mode - inverting some colors while maintaining brand identity */
+  --background: oklch(0.2 0.05 240); /* Dark Vattenfall blue */
+  --foreground: oklch(0.98 0.01 100);
+  --card: oklch(0.25 0.07 240);
+  --card-foreground: oklch(0.98 0.01 100);
+  --popover: oklch(0.25 0.07 240);
+  --popover-foreground: oklch(0.98 0.01 100);
+  --primary: oklch(0.85 0.15 85); /* Vattenfall yellow */
+  --primary-foreground: oklch(0.2 0.05 240);
+  --secondary: oklch(0.3 0.07 240);
+  --secondary-foreground: oklch(0.98 0.01 100);
+  --muted: oklch(0.3 0.05 240);
+  --muted-foreground: oklch(0.7 0.05 240);
+  --accent: oklch(0.85 0.15 85); /* Vattenfall yellow */
+  --accent-foreground: oklch(0.2 0.05 240);
+  --destructive: oklch(0.7 0.2 30);
+  --border: oklch(0.3 0.05 240);
+  --input: oklch(0.3 0.05 240);
+  --ring: oklch(0.5 0.05 240);
+  /* Chart colors - dark mode */
+  --chart-1: oklch(0.85 0.15 85); /* Vattenfall yellow */
+  --chart-2: oklch(0.7 0.1 240); /* Light blue */
+  --chart-3: oklch(0.75 0.1 85); /* Soft yellow */
+  --chart-4: oklch(0.5 0.1 240); /* Medium blue */
+  --chart-5: oklch(0.65 0.1 85); /* Muted yellow */
+  /* Sidebar dark mode */
+  --sidebar: oklch(0.25 0.07 240);
+  --sidebar-foreground: oklch(0.98 0.01 100);
+  --sidebar-primary: oklch(0.85 0.15 85);
+  --sidebar-primary-foreground: oklch(0.2 0.05 240);
+  --sidebar-accent: oklch(0.85 0.15 85);
+  --sidebar-accent-foreground: oklch(0.2 0.05 240);
+  --sidebar-border: oklch(0.3 0.05 240);
+  --sidebar-ring: oklch(0.5 0.05 240);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  
+  html {
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    text-rendering: optimizeLegibility;
+  }
+  
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  /* Headings */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-wide;
+  }
+
+  h1 {
+    @apply text-4xl leading-tight mb-6;
+    letter-spacing: -0.02em;
+  }
+
+  h2 {
+    @apply text-2xl leading-tight mb-4;
+    letter-spacing: -0.01em;
+  }
+
+  h3 {
+    @apply text-xl leading-snug mb-3;
+  }
+
+  h4 {
+    @apply text-lg leading-snug mb-2;
+  }
+
+  /* Body text */
+  p {
+    @apply mb-4 text-base leading-relaxed;
+  }
+
+  /* Links */
+  a {
+    @apply text-primary hover:text-primary/90 transition-colors;
+  }
+
+  /* Lists */
+  ul, ol {
+    @apply mb-4 pl-6;
+  }
+
+  li {
+    @apply mb-1;
+  }
+
+  /* Small text */
+  small, .text-sm {
+    @apply text-sm leading-normal;
+  }
+
+  /* Large text */
+  .text-lg {
+    @apply text-lg leading-relaxed;
+  }
+
+  /* Section headers */
+  .section-title {
+    @apply text-lg font-semibold uppercase tracking-wider text-muted-foreground mb-4;
+  }
+
+  /* Form labels */
+  label {
+    @apply text-sm font-medium leading-none mb-2;
+  }
+
+  /* Table headers */
+  th {
+    @apply text-sm font-semibold tracking-wide uppercase;
   }
 }

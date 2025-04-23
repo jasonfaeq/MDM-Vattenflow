@@ -28,6 +28,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { AIService } from "@/lib/services/ai-service";
+import { ExportButton } from "@/components/ExportButton";
 
 // Status color mapping
 const statusColors: Record<string, string> = {
@@ -172,7 +173,13 @@ export default function RequestDetailPage({
     if (Array.isArray(data)) {
       return (
         <div className="space-y-4">
-          <p className="font-medium">WBS Elements ({data.length} items)</p>
+          <div className="flex justify-between items-center">
+            <p className="font-medium">WBS Elements ({data.length} items)</p>
+            <ExportButton 
+              wbsData={data} 
+              region={request.region || 'DE'} // Adjust based on where your region data is stored
+            />
+          </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">

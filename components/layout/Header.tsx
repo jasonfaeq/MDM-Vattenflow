@@ -13,14 +13,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  User,
   LogOut,
   Settings,
   Moon,
   Sun,
   ShieldAlert,
   ChevronDown,
-  Plus,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
@@ -50,11 +48,11 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center justify-end">
+      <div className="h-14 flex items-center justify-end pr-4">
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="h-8 w-8 px-0">
                 {theme === "light" ? (
                   <Sun className="h-4 w-4" />
                 ) : (
@@ -83,9 +81,9 @@ export function Header() {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="relative h-8 flex items-center gap-2"
+                className="h-8 flex items-center gap-2 px-2"
               >
-                <Avatar className="h-8 w-8 bg-primary/10">
+                <Avatar className="h-7 w-7 bg-primary/10">
                   <AvatarFallback className="text-xs font-medium text-primary">
                     {userInitials}
                   </AvatarFallback>

@@ -38,7 +38,7 @@ const tableStyles = {
   table: "w-full table-fixed",
   tableContainer: "overflow-x-auto border rounded-lg",
   checkbox: "w-[50px] min-w-[50px] px-2",
-  type: "w-[100px] min-w-[160px]",
+  type: "w-[120px] min-w-[160px]",
   controllingArea: "w-[180px] min-w-[180px]",
   companyCode: "w-[150px] min-w-[150px]",
   projectName: "w-[250px] min-w-[250px]",

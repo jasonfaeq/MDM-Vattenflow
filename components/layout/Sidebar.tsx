@@ -13,6 +13,8 @@ import {
   Book,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import Logo from "./Logo";
+
 const routes = [
   {
     label: "Dashboard",
@@ -52,10 +54,21 @@ export function Sidebar({ isAdmin = false }: SidebarProps) {
   return (
     <div className="space-y-4 py-4 flex flex-col h-full bg-secondary/10">
       <div className="px-3 py-2 flex-1">
-        <Link href="/dashboard" className="flex items-center pl-3 mb-14">
-          <h1 className="text-2xl font-bold">MDM Vattenflow</h1>
+        <Link 
+          href="/dashboard" 
+          className="flex items-center pl-3 mb-14 gap-4 group hover:opacity-90 transition-opacity"
+        >
+          <Logo className="w-8 h-8" />
+          <div className="flex flex-col">
+            <span className="text-lg font-bold tracking-wide leading-none">
+              VATTEN
+            </span>
+            <span className="text-lg font-light tracking-wider leading-none text-muted-foreground">
+              FLOW
+            </span>
+          </div>
         </Link>
-        <Separator />
+        <Separator className="mb-4" />
 
         <div className="space-y-1">
           {routes.map((route) => {
