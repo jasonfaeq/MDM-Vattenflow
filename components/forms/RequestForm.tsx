@@ -5,34 +5,11 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { addDoc, collection, Timestamp } from "firebase/firestore";
-import { toast } from "sonner";
-import { db } from "@/lib/firebase/config";
 import { useAuth } from "@/lib/auth";
-import {
-  Request,
-  RequestType,
-  Region,
-  WBSData,
-  PCData,
-  CCData,
-  ModifyData,
-  LockUnlockData,
-  SubmittedData,
-  StoredSubmittedData,
-  StoredWBSData,
-  StoredPCData,
-  StoredCCData,
-  StoredModifyData,
-  StoredLockUnlockData,
-} from "@/types";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { db } from "@/lib/firebase/config";
+import { collection, addDoc, updateDoc, doc, Timestamp, serverTimestamp } from "firebase/firestore";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -48,21 +25,43 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import WBSForm from "./WBSForm";
-import PCForm from "./PCForm";
-import CCForm from "./CCForm";
-import ModifyRequestForm from "./ModifyRequestForm";
-import LockUnlockRequestForm from "./LockUnlockRequestForm";
+import PCCCForm from "./PCCCForm";
+import {
+  Region,
+  Request,
+  WBSData,
+  PCCCData,
+  StoredWBSData,
+  StoredPCCCData,
+  RequestType,
+  RequestStatus,
+} from "@/types";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 const formSchema = z.object({
-  requestType: z.string() as z.ZodType<RequestType>,
-  region: z.string() as z.ZodType<Region>,
+  requestType: z.string().min(1, "Request type is required"),
+  requestName: z.string().min(1, "Request name is required"),
+  region: z.string().min(1, "Region is required"),
+  submittedData: z.any(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function RequestForm() {
+interface RequestFormProps {
+  initialData?: Request;
+  onSubmitSuccess?: () => void;
+  isAdmin?: boolean;
+}
+
+export default function RequestForm({ initialData, onSubmitSuccess, isAdmin = false }: RequestFormProps) {
   const { user } = useAuth();
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -71,9 +70,16 @@ export default function RequestForm() {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      requestType: "WBS",
-      region: "DE",
+    defaultValues: initialData ? {
+      requestType: initialData.requestType,
+      requestName: initialData.requestName,
+      region: initialData.region,
+      submittedData: initialData.submittedData,
+    } : {
+      requestType: "",
+      requestName: "",
+      region: "",
+      submittedData: {},
     },
   });
 
@@ -82,47 +88,100 @@ export default function RequestForm() {
     setStep(2);
   };
 
-  const submitRequest = async (submittedData: SubmittedData) => {
+  const submitWBSRequest = async (data: WBSData[]) => {
     if (!user || !formValues) return;
 
     setIsSubmitting(true);
     try {
-      // Create request object
-      const now = Timestamp.now();
-
-      // Convert dates to Timestamps
-      const convertDates = (data: any) => ({
+      const convertDates = (data: WBSData): StoredWBSData => ({
         ...data,
         startDate: data.startDate instanceof Date ? Timestamp.fromDate(data.startDate) : null,
         endDate: data.endDate instanceof Date ? Timestamp.fromDate(data.endDate) : null,
       });
 
-      const request: Omit<Request, "id"> = {
+      const requestData = {
         requesterId: user.uid,
         requesterEmail: user.email,
-        requestType: formValues.requestType,
-        region: formValues.region,
-        status: "Submitted",
-        createdAt: now,
-        updatedAt: now,
-        submittedData: Array.isArray(submittedData) 
-          ? submittedData.map(convertDates)
-          : convertDates(submittedData),
-        comments: [],
-        internalComments: [],
-        history: [
-          {
-            timestamp: now,
-            status: "Submitted",
-            changedByUserId: user.uid,
-            changedByUserName: user.displayName || user.email,
-          },
-        ],
+        requestType: formValues.requestType as RequestType,
+        region: formValues.region as Region,
+        requestName: formValues.requestName,
+        status: "DRAFT" as RequestStatus,
+        updatedAt: serverTimestamp() as Timestamp,
+        submittedData: data.map(convertDates),
       };
 
-      await addDoc(collection(db, "requests"), request);
-      toast.success("Request submitted successfully!");
-      router.push("/requests");
+      if (initialData?.id) {
+        // Update existing request
+        await updateDoc(doc(db, "requests", initialData.id), {
+          ...requestData,
+          status: initialData.status, // Preserve the current status
+        });
+        toast.success("Request updated successfully!");
+      } else {
+        // Create new request
+        await addDoc(collection(db, "requests"), {
+          ...requestData,
+          createdAt: serverTimestamp() as Timestamp,
+          comments: [],
+          internalComments: [],
+          history: [],
+        });
+        toast.success("Request submitted successfully!");
+      }
+
+      onSubmitSuccess?.();
+      router.push(isAdmin ? "/admin/requests" : "/requests");
+    } catch (error) {
+      console.error("Error submitting request:", error);
+      toast.error("Failed to submit request. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const submitPCCCRequest = async (data: PCCCData[]) => {
+    if (!user || !formValues) return;
+
+    setIsSubmitting(true);
+    try {
+      const convertDates = (data: PCCCData): StoredPCCCData => ({
+        ...data,
+        startDate: data.startDate instanceof Date ? Timestamp.fromDate(data.startDate) : null,
+        endDate: data.endDate instanceof Date ? Timestamp.fromDate(data.endDate) : null,
+      });
+
+      const requestData = {
+        requesterId: user.uid,
+        requesterEmail: user.email,
+        requestType: formValues.requestType as RequestType,
+        region: formValues.region as Region,
+        requestName: formValues.requestName,
+        status: "DRAFT" as RequestStatus,
+        updatedAt: serverTimestamp() as Timestamp,
+        submittedData: data.map(convertDates),
+      };
+
+      if (initialData?.id) {
+        // Update existing request
+        await updateDoc(doc(db, "requests", initialData.id), {
+          ...requestData,
+          status: initialData.status, // Preserve the current status
+        });
+        toast.success("Request updated successfully!");
+      } else {
+        // Create new request
+        await addDoc(collection(db, "requests"), {
+          ...requestData,
+          createdAt: serverTimestamp() as Timestamp,
+          comments: [],
+          internalComments: [],
+          history: [],
+        });
+        toast.success("Request submitted successfully!");
+      }
+
+      onSubmitSuccess?.();
+      router.push(isAdmin ? "/admin/requests" : "/requests");
     } catch (error) {
       console.error("Error submitting request:", error);
       toast.error("Failed to submit request. Please try again.");
@@ -133,19 +192,19 @@ export default function RequestForm() {
 
   const renderFormByType = () => {
     if (!formValues) return null;
-
     switch (formValues.requestType) {
       case "WBS":
-        return <WBSForm region={formValues.region} onSubmit={submitRequest} />;
-      case "PC":
-        return <PCForm region={formValues.region} onSubmit={submitRequest} />;
-      case "CC":
-        return <CCForm region={formValues.region} onSubmit={submitRequest} />;
-      case "Modify":
-        return <ModifyRequestForm />;
-      case "Lock":
-      case "Unlock":
-        return <LockUnlockRequestForm />;
+        return <WBSForm 
+          region={formValues.region as Region} 
+          onSubmit={submitWBSRequest}
+          initialData={initialData?.submittedData as WBSData[]} 
+        />;
+      case "PCCC":
+        return <PCCCForm 
+          region={formValues.region as Region} 
+          onSubmit={submitPCCCRequest}
+          initialData={initialData?.submittedData as PCCCData[]}
+        />;
       default:
         return null;
     }
@@ -155,9 +214,9 @@ export default function RequestForm() {
     <div className="max-w-7xl mx-auto">
       <Card>
         <CardHeader>
-          <CardTitle>New MDM Request</CardTitle>
+          <CardTitle>{initialData ? "Edit Request" : "New MDM Request"}</CardTitle>
           <CardDescription>
-            Submit a new request to the MDM team for processing
+            {initialData ? "Update your request details" : "Submit a new request to the MDM team for processing"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -168,6 +227,19 @@ export default function RequestForm() {
                 className="space-y-6"
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="requestName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Request Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter request name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={form.control}
                     name="requestType"
@@ -185,11 +257,7 @@ export default function RequestForm() {
                           </FormControl>
                           <SelectContent>
                             <SelectItem value="WBS">WBS Element</SelectItem>
-                            <SelectItem value="PC">Profit Center</SelectItem>
-                            <SelectItem value="CC">Cost Center</SelectItem>
-                            <SelectItem value="Modify">Modify</SelectItem>
-                            <SelectItem value="Lock">Lock</SelectItem>
-                            <SelectItem value="Unlock">Unlock</SelectItem>
+                            <SelectItem value="PCCC">PC/CC</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -217,9 +285,7 @@ export default function RequestForm() {
                             <SelectItem value="NL">Netherlands (NL)</SelectItem>
                             <SelectItem value="SE">Sweden (SE)</SelectItem>
                             <SelectItem value="DK">Denmark (DK)</SelectItem>
-                            <SelectItem value="UK">
-                              United Kingdom (UK)
-                            </SelectItem>
+                            <SelectItem value="UK">United Kingdom (UK)</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -229,7 +295,7 @@ export default function RequestForm() {
                 </div>
 
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? "Submitting..." : "Submit Request"}
+                  {isSubmitting ? "Submitting..." : "Continue"}
                 </Button>
               </form>
             </Form>

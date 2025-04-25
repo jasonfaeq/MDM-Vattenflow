@@ -4,7 +4,7 @@ export type UserRole = "Controller" | "MDM" | "Administrator";
 
 export type Region = "DE" | "NL" | "SE" | "DK" | "UK";
 
-export type RequestType = "WBS" | "PC" | "CC" | "Modify" | "Lock" | "Unlock";
+export type RequestType = "WBS" | "PC" | "CC" | "PCCC" | "Modify" | "Lock" | "Unlock";
 
 export type RequestStatus =
   | "Submitted"
@@ -13,6 +13,8 @@ export type RequestStatus =
   | "ForwardedToSD"
   | "Completed"
   | "Rejected";
+
+export type RegionType = "DE" | "NL" | "SE" | "PL";
 
 export interface Comment {
   userId: string;
@@ -47,7 +49,8 @@ export interface WBSData extends BaseRequestData {
   companyCode: string;
   projectName: string;
   projectDefinition: string;
-  level?: string;
+  level: string;
+  projectType: string;
   responsiblePCCC: string;
   planningElement?: boolean;
   rubricElement?: boolean;
@@ -78,6 +81,19 @@ export interface CCData extends BaseRequestData {
   // Add other fields as needed
 }
 
+export interface PCCCData extends BaseRequestData {
+  type: "New" | "Update" | "Lock" | "Unlock" | "Close";
+  pcccId: string;
+  description: string;
+  controllingArea: string;
+  companyCode: string;
+  responsiblePerson: string;
+  userId: string;
+  employmentNumber: string;
+  functionalArea?: string;
+  comment?: string;
+}
+
 export interface ModifyData extends BaseRequestData {
   objectType: "WBS" | "PC" | "CC";
   objectId: string;
@@ -95,10 +111,11 @@ export interface LockUnlockData extends BaseRequestData {
 export type StoredWBSData = Omit<WBSData, 'startDate' | 'endDate'> & StoredBaseRequestData;
 export type StoredPCData = Omit<PCData, 'startDate' | 'endDate'> & StoredBaseRequestData;
 export type StoredCCData = Omit<CCData, 'startDate' | 'endDate'> & StoredBaseRequestData;
+export type StoredPCCCData = Omit<PCCCData, 'startDate' | 'endDate'> & StoredBaseRequestData;
 export type StoredModifyData = Omit<ModifyData, 'startDate' | 'endDate'> & StoredBaseRequestData;
 export type StoredLockUnlockData = Omit<LockUnlockData, 'startDate' | 'endDate'> & StoredBaseRequestData;
 
-export type SubmittedData = WBSData | WBSData[] | PCData | PCData[] | CCData | CCData[] | ModifyData | LockUnlockData;
+export type SubmittedData = WBSData | WBSData[] | PCData | PCData[] | CCData | CCData[] | PCCCData | PCCCData[] | ModifyData | LockUnlockData;
 
 export type StoredSubmittedData = 
   | StoredWBSData 
@@ -107,6 +124,8 @@ export type StoredSubmittedData =
   | StoredPCData[] 
   | StoredCCData 
   | StoredCCData[] 
+  | StoredPCCCData
+  | StoredPCCCData[]
   | StoredModifyData 
   | StoredLockUnlockData;
 
@@ -121,6 +140,7 @@ export interface Request {
   id: string;
   requesterId: string;
   requesterEmail: string;
+  requestName: string;
   requestType: RequestType;
   region: Region;
   status: RequestStatus;

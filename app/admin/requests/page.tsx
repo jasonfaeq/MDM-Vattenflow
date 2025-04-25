@@ -183,6 +183,7 @@ export default function AdminRequestsPage() {
                 <TableRow>
                   <TableHead>Request ID</TableHead>
                   <TableHead>Type</TableHead>
+                  <TableHead>Name</TableHead>
                   <TableHead>Region</TableHead>
                   <TableHead>Requester</TableHead>
                   <TableHead>Status</TableHead>
@@ -197,6 +198,7 @@ export default function AdminRequestsPage() {
                       {request.id ? `${request.id.slice(0, 8)}...` : "Unknown"}
                     </TableCell>
                     <TableCell>{request.requestType}</TableCell>
+                    <TableCell>{request.requestName}</TableCell>
                     <TableCell>{request.region}</TableCell>
                     <TableCell>{request.requesterEmail}</TableCell>
                     <TableCell>
@@ -210,6 +212,11 @@ export default function AdminRequestsPage() {
                         <Button variant="outline" size="sm" asChild>
                           <Link href={`/admin/requests/${request.id}`}>
                             Manage
+                          </Link>
+                        </Button>
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href={`/admin/requests/${request.id}/edit`}>
+                            Edit
                           </Link>
                         </Button>
                         <Button

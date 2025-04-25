@@ -463,6 +463,7 @@ export default function AdminRequestDetailPage({
             <div>
               <CardTitle>
                 {request.requestType} - {request.region}
+                <span className="block text-lg font-normal mt-1">{request.requestName}</span>
               </CardTitle>
               <CardDescription>
                 Submitted on {formatDate(request.createdAt)} by{" "}

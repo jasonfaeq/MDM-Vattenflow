@@ -15,7 +15,7 @@ import {
 import { toast } from "sonner";
 import { db } from "@/lib/firebase/config";
 import { useAuth } from "@/lib/auth";
-import { Request, Comment } from "@/types";
+import { Request, Comment, Region, RegionType, WBSData } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +29,8 @@ import {
 } from "@/components/ui/card";
 import { AIService } from "@/lib/services/ai-service";
 import { ExportButton } from "@/components/ExportButton";
+import { getControllingAreaOptions, getProjectTypeOptions, getFunctionalAreaOptions, getProjectSpecOptions } from "@/components/forms/WBSForm";
+import type { RegionType as RegionTypeImport } from "@/types";
 
 // Status color mapping
 const statusColors: Record<string, string> = {
@@ -38,6 +40,25 @@ const statusColors: Record<string, string> = {
   ForwardedToSD: "secondary",
   Completed: "success",
   Rejected: "destructive",
+} as const;
+
+interface OptionType {
+  value: string;
+  label: string;
+}
+
+// Update type guard function
+function isWBSData(data: unknown): data is WBSData[] {
+  return Array.isArray(data) && data.length > 0 && 'controllingArea' in data[0];
+}
+
+// Add formatDate function
+const formatDate = (timestamp: Date | { toDate: () => Date } | null) => {
+  if (!timestamp) return "N/A";
+  if ('toDate' in timestamp) {
+    return format(timestamp.toDate(), "dd MMM yyyy HH:mm");
+  }
+  return format(timestamp, "dd MMM yyyy HH:mm");
 };
 
 export default function RequestDetailPage({
@@ -84,17 +105,6 @@ export default function RequestDetailPage({
 
     return () => unsubscribe();
   }, [requestId, router, user]);
-
-  const formatDate = (timestamp: any) => {
-    if (!timestamp) return "N/A";
-    if (timestamp.toDate) {
-      return format(timestamp.toDate(), "dd MMM yyyy HH:mm");
-    }
-    if (timestamp instanceof Date) {
-      return format(timestamp, "dd MMM yyyy HH:mm");
-    }
-    return "Invalid date";
-  };
 
   const handleCommentSubmit = async () => {
     if (!user || !request || !comment.trim()) return;
@@ -170,14 +180,14 @@ export default function RequestDetailPage({
     const data = request.submittedData;
 
     // For bulk WBS, render a table
-    if (Array.isArray(data)) {
+    if (isWBSData(data)) {
       return (
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <p className="font-medium">WBS Elements ({data.length} items)</p>
             <ExportButton 
               wbsData={data} 
-              region={request.region || 'DE'} // Adjust based on where your region data is stored
+              region={request.region as RegionType}
             />
           </div>
           <div className="overflow-x-auto">
@@ -190,27 +200,84 @@ export default function RequestDetailPage({
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Name</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Definition</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Level</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Type</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Responsible PC/CC</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Planning Element</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rubric Element</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Billing Element</th>
+                  {request.region === "NL" && (
+                    <>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Settlement Rule %</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Settlement Rule Goal</th>
+                    </>
+                  )}
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Responsible Person</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User ID</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employment Number</th>
+                  {request.region === "NL" && (
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Functional Area</th>
+                  )}
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TG Phase</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Spec</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mother Code</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comment</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {data.map((wbs, index) => (
-                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.type}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.controllingArea}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.companyCode}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.projectName}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.projectDefinition}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.level}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.responsiblePCCC}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.planningElement ? 'Yes' : 'No'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.rubricElement ? 'Yes' : 'No'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.billingElement ? 'Yes' : 'No'}</td>
-                  </tr>
-                ))}
+                {data.map((wbs, index) => {
+                  // Get the full controlling area label
+                  const controllingAreaOption = getControllingAreaOptions(request.region as RegionType)
+                    .find((option: OptionType) => option.value === wbs.controllingArea);
+                  const controllingAreaLabel = controllingAreaOption ? controllingAreaOption.label : wbs.controllingArea;
+
+                  // Get the full project type label
+                  const projectTypeOption = getProjectTypeOptions(request.region as RegionType)
+                    .find((option: OptionType) => option.value === wbs.projectType);
+                  const projectTypeLabel = projectTypeOption ? projectTypeOption.label : wbs.projectType;
+
+                  // Get the full functional area label if in NL region
+                  const functionalAreaOption = request.region === "NL" ? 
+                    getFunctionalAreaOptions(request.region as RegionType)
+                      .find((option: OptionType) => option.value === wbs.functionalArea) : null;
+                  const functionalAreaLabel = functionalAreaOption ? functionalAreaOption.label : wbs.functionalArea;
+
+                  // Get the full project spec label
+                  const projectSpecOption = getProjectSpecOptions(request.region as RegionType)
+                    .find((option: OptionType) => option.value === wbs.projectSpec);
+                  const projectSpecLabel = projectSpecOption ? projectSpecOption.label : wbs.projectSpec;
+
+                  return (
+                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.type}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{controllingAreaLabel}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.companyCode}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.projectName}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.projectDefinition}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.level}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{projectTypeLabel}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.responsiblePCCC}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.planningElement ? 'Yes' : 'No'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.rubricElement ? 'Yes' : 'No'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.billingElement ? 'Yes' : 'No'}</td>
+                      {request.region === "NL" && (
+                        <>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.settlementRulePercent}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.settlementRuleGoal}</td>
+                        </>
+                      )}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.responsiblePerson}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.userId}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.employmentNumber}</td>
+                      {request.region === "NL" && (
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{functionalAreaLabel}</td>
+                      )}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.tgPhase}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{projectSpecLabel}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.motherCode}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.comment}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -277,6 +344,7 @@ export default function RequestDetailPage({
             <div>
               <CardTitle>
                 {request.requestType} - {request.region}
+                <span className="block text-lg font-normal mt-1">{request.requestName}</span>
               </CardTitle>
               <CardDescription>
                 Submitted on {formatDate(request.createdAt)}

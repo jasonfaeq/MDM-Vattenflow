@@ -135,6 +135,7 @@ export default function RequestsPage() {
                 <TableRow>
                   <TableHead>Request ID</TableHead>
                   <TableHead>Type</TableHead>
+                  <TableHead>Name</TableHead>
                   <TableHead>Region</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>
@@ -148,6 +149,7 @@ export default function RequestsPage() {
                       {request.id ? `${request.id.slice(0, 8)}...` : "Unknown"}
                     </TableCell>
                     <TableCell>{request.requestType}</TableCell>
+                    <TableCell>{request.requestName}</TableCell>
                     <TableCell>{request.region}</TableCell>
                     <TableCell>
                       <Badge variant={statusColors[request.status] as any}>
@@ -156,9 +158,16 @@ export default function RequestsPage() {
                     </TableCell>
                     <TableCell>{formatDate(request.createdAt)}</TableCell>
                     <TableCell>
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={`/requests/${request.id}`}>View</Link>
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href={`/requests/${request.id}`}>View</Link>
+                        </Button>
+                        {request.status === "Submitted" && (
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href={`/requests/${request.id}/edit`}>Edit</Link>
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

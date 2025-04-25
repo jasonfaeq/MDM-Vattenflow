@@ -9,7 +9,7 @@ import {
   orderBy,
   onSnapshot,
 } from "firebase/firestore";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { db } from "@/lib/firebase/config";
 import { useAuth } from "@/lib/auth";
 import { Request } from "@/types";
@@ -172,6 +172,7 @@ export default function Dashboard() {
                 <TableRow>
                   <TableHead>Request ID</TableHead>
                   <TableHead>Type</TableHead>
+                  <TableHead>Name</TableHead>
                   <TableHead>Region</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>
@@ -183,6 +184,7 @@ export default function Dashboard() {
                   <TableRow key={request.id}>
                     <TableCell>{getTruncatedId(request.id)}</TableCell>
                     <TableCell>{request.requestType}</TableCell>
+                    <TableCell>{request.requestName}</TableCell>
                     <TableCell>{request.region}</TableCell>
                     <TableCell>
                       <Badge
@@ -195,9 +197,16 @@ export default function Dashboard() {
                     </TableCell>
                     <TableCell>{formatDate(request.createdAt)}</TableCell>
                     <TableCell>
-                      <Button asChild variant="ghost" size="sm">
-                        <Link href={`/requests/${request.id}`}>View</Link>
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button asChild variant="ghost" size="sm">
+                          <Link href={`/requests/${request.id}`}>View</Link>
+                        </Button>
+                        {request.status === "Submitted" && (
+                          <Button asChild variant="ghost" size="sm">
+                            <Link href={`/requests/${request.id}/edit`}>Edit</Link>
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

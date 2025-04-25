@@ -316,6 +316,9 @@ export default function AdminDashboardPage() {
                           </Badge>
                         </div>
                         <div className="text-sm text-muted-foreground mt-1">
+                          {request.requestName}
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1">
                           From {request.requesterEmail} ·{" "}
                           {formatDistanceToNow(request.createdAt.toDate(), {
                             addSuffix: true,
@@ -381,6 +384,9 @@ export default function AdminDashboardPage() {
                             >
                               {request.status}
                             </Badge>
+                          </div>
+                          <div className="text-sm text-muted-foreground mt-1">
+                            {request.requestName}
                           </div>
                           <div className="text-sm text-muted-foreground mt-1">
                             From {request.requesterEmail} ·{" "}
