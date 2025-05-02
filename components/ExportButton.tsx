@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
-import { WBSElement, WBSData } from "@/types";
+import { StoredWBSData } from "@/types";
 import { toast } from "sonner";
 import type { RegionType } from "@/types";
 
 export interface ExportButtonProps {
-  wbsData: WBSData[];
+  wbsData: StoredWBSData[];
   region: RegionType;
 }
 

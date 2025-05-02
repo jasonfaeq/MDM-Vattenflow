@@ -14,7 +14,7 @@ export type RequestStatus =
   | "Completed"
   | "Rejected";
 
-export type RegionType = "DE" | "NL" | "SE" | "PL";
+export type RegionType = "DE" | "NL" | "SE" | "DK" | "UK";
 
 export interface Comment {
   userId: string;
@@ -44,7 +44,16 @@ export interface StoredBaseRequestData {
 }
 
 export interface WBSData extends BaseRequestData {
-  type: "New" | "Update" | "Lock" | "Unlock" | "Close";
+  type:
+    | "New"
+    | "Update"
+    | "Update + Lock"
+    | "Update + Unlock"
+    | "Lock (only)"
+    | "Unlock (only)"
+    | "Close (only)"
+    | "Complete Technically (only)"
+    | "Update + Close";
   controllingArea: string;
   companyCode: string;
   projectName: string;

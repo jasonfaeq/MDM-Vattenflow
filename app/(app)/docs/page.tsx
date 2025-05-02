@@ -49,7 +49,7 @@ export default function DocsPage() {
             <CardContent className="space-y-4">
               <p>
                 The Master Data Management (MDM) system helps you manage and
-                maintain organizational data efficiently. Here's what you need
+                maintain organizational data efficiently. Here is what you need
                 to know:
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

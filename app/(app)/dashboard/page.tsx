@@ -8,11 +8,12 @@ import {
   where,
   orderBy,
   onSnapshot,
+  Timestamp,
 } from "firebase/firestore";
-import { format, formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import { db } from "@/lib/firebase/config";
 import { useAuth } from "@/lib/auth";
-import { Request } from "@/types";
+import { Request, RequestStatus } from "@/types";
 import {
   Card,
   CardContent,
@@ -35,7 +36,7 @@ import { toast } from "sonner";
 import { exportRequestsToCSV } from "@/lib/utils";
 
 // Status color mapping
-const statusColors: Record<string, string> = {
+const statusColors: Record<RequestStatus, "default" | "secondary" | "warning" | "success" | "destructive"> = {
   Submitted: "default",
   InProgress: "secondary",
   PendingInfo: "warning",
@@ -102,9 +103,9 @@ export default function Dashboard() {
     setSearchTerm(term);
   }, [searchTerm, requests]);
 
-  const formatDate = (timestamp: any) => {
+  const formatDate = (timestamp: Timestamp | Date | null) => {
     if (!timestamp) return "N/A";
-    if (timestamp.toDate) {
+    if ('toDate' in timestamp) {
       return format(timestamp.toDate(), "dd MMM yyyy");
     }
     if (timestamp instanceof Date) {
@@ -162,7 +163,7 @@ export default function Dashboard() {
           ) : filteredRequests.length === 0 ? (
             <div className="py-8 text-center">
               <p className="text-muted-foreground">
-                You haven't submitted any requests yet.
+                You haven&apos;t submitted any requests yet.
               </p>
             </div>
           ) : (
@@ -188,9 +189,7 @@ export default function Dashboard() {
                     <TableCell>{request.region}</TableCell>
                     <TableCell>
                       <Badge
-                        variant={
-                          (statusColors[request.status] as any) || "default"
-                        }
+                        variant={statusColors[request.status]}
                       >
                         {request.status}
                       </Badge>

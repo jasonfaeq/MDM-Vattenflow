@@ -105,7 +105,7 @@ export default function RequestForm({ initialData, onSubmitSuccess, isAdmin = fa
         requestType: formValues.requestType as RequestType,
         region: formValues.region as Region,
         requestName: formValues.requestName,
-        status: "DRAFT" as RequestStatus,
+        status: "Submitted" as RequestStatus,
         updatedAt: serverTimestamp() as Timestamp,
         submittedData: data.map(convertDates),
       };
@@ -156,7 +156,7 @@ export default function RequestForm({ initialData, onSubmitSuccess, isAdmin = fa
         requestType: formValues.requestType as RequestType,
         region: formValues.region as Region,
         requestName: formValues.requestName,
-        status: "DRAFT" as RequestStatus,
+        status: "Submitted" as RequestStatus,
         updatedAt: serverTimestamp() as Timestamp,
         submittedData: data.map(convertDates),
       };
@@ -234,7 +234,7 @@ export default function RequestForm({ initialData, onSubmitSuccess, isAdmin = fa
                       <FormItem>
                         <FormLabel>Request Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter request name" {...field} />
+                          <Input placeholder="Enter request name" {...field} autoComplete="off" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

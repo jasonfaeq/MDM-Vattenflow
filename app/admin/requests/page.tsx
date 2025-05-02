@@ -10,9 +10,10 @@ import {
   onSnapshot,
   deleteDoc,
   doc,
+  Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import { Request } from "@/types";
+import { Request, RequestStatus } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -46,7 +47,7 @@ import {
 import { Trash2 } from "lucide-react";
 
 // Status color mapping
-const statusColors: Record<string, string> = {
+const statusColors: Record<RequestStatus, "default" | "secondary" | "warning" | "success" | "destructive"> = {
   Submitted: "default",
   InProgress: "secondary",
   PendingInfo: "warning",
@@ -96,9 +97,9 @@ export default function AdminRequestsPage() {
     return () => unsubscribe();
   }, [user]);
 
-  const formatDate = (timestamp: any) => {
+  const formatDate = (timestamp: Timestamp | Date | null) => {
     if (!timestamp) return "N/A";
-    if (timestamp.toDate) {
+    if ('toDate' in timestamp) {
       return format(timestamp.toDate(), "dd MMM yyyy");
     }
     if (timestamp instanceof Date) {
@@ -202,7 +203,7 @@ export default function AdminRequestsPage() {
                     <TableCell>{request.region}</TableCell>
                     <TableCell>{request.requesterEmail}</TableCell>
                     <TableCell>
-                      <Badge variant={statusColors[request.status] as any}>
+                      <Badge variant={statusColors[request.status]}>
                         {request.status}
                       </Badge>
                     </TableCell>

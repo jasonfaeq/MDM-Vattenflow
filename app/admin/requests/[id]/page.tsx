@@ -43,7 +43,7 @@ import { Bot } from "lucide-react";
 import { AiButton } from "@/components/ui/ai-button";
 
 // Status color mapping
-const statusColors: Record<string, string> = {
+const statusColors: Record<RequestStatus, "default" | "secondary" | "warning" | "success" | "destructive"> = {
   Submitted: "default",
   InProgress: "secondary",
   PendingInfo: "warning",
@@ -100,9 +100,9 @@ export default function AdminRequestDetailPage({
     return () => unsubscribe();
   }, [requestId, router, user]);
 
-  const formatDate = (timestamp: any) => {
+  const formatDate = (timestamp: Timestamp | Date | null) => {
     if (!timestamp) return "N/A";
-    if (timestamp.toDate) {
+    if ('toDate' in timestamp) {
       return format(timestamp.toDate(), "dd MMM yyyy HH:mm");
     }
     if (timestamp instanceof Date) {
@@ -470,7 +470,7 @@ export default function AdminRequestDetailPage({
                 {request.requesterEmail}
               </CardDescription>
             </div>
-            <Badge variant={statusColors[request.status] as any}>
+            <Badge variant={statusColors[request.status]}>
               {request.status}
             </Badge>
           </div>
@@ -676,7 +676,7 @@ export default function AdminRequestDetailPage({
                     >
                       <span>
                         Status changed to{" "}
-                        <Badge variant={statusColors[entry.status] as any}>
+                        <Badge variant={statusColors[entry.status]}>
                           {entry.status}
                         </Badge>{" "}
                         by {entry.changedByUserName}

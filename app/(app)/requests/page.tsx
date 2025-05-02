@@ -11,7 +11,7 @@ import {
   onSnapshot,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import { Request } from "@/types";
+import { Request, RequestStatus } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -32,9 +32,10 @@ import {
 } from "@/components/ui/card";
 import { format } from "date-fns";
 import { FileText } from "lucide-react";
+import { Timestamp } from "firebase/firestore";
 
 // Status color mapping
-const statusColors: Record<string, string> = {
+const statusColors: Record<RequestStatus, "default" | "secondary" | "warning" | "success" | "destructive"> = {
   Submitted: "default",
   InProgress: "secondary",
   PendingInfo: "warning",
@@ -77,9 +78,9 @@ export default function RequestsPage() {
     return () => unsubscribe();
   }, [user]);
 
-  const formatDate = (timestamp: any) => {
+  const formatDate = (timestamp: Timestamp | Date | null) => {
     if (!timestamp) return "N/A";
-    if (timestamp.toDate) {
+    if ('toDate' in timestamp) {
       return format(timestamp.toDate(), "dd MMM yyyy");
     }
     if (timestamp instanceof Date) {
@@ -111,7 +112,7 @@ export default function RequestsPage() {
           <CardHeader>
             <CardTitle>No requests found</CardTitle>
             <CardDescription>
-              You haven't submitted any requests yet.
+              You haven&apos;t submitted any requests yet.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -152,7 +153,7 @@ export default function RequestsPage() {
                     <TableCell>{request.requestName}</TableCell>
                     <TableCell>{request.region}</TableCell>
                     <TableCell>
-                      <Badge variant={statusColors[request.status] as any}>
+                      <Badge variant={statusColors[request.status]}>
                         {request.status}
                       </Badge>
                     </TableCell>

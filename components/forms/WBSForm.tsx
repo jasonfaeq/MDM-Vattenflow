@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Region } from "@/types";
+import { Region, RegionType } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -49,6 +49,18 @@ const tableStyles = {
   projectType: "w-[120px] min-w-[120px]",
 } as const;
 
+// Define WBS type options as a union type
+export type WbsTypeOptions =
+  | "New"
+  | "Update"
+  | "Update + Lock"
+  | "Update + Unlock"
+  | "Lock (only)"
+  | "Unlock (only)"
+  | "Close (only)"
+  | "Complete Technically (only)"
+  | "Update + Close";
+
 const baseWBSSchema = z.object({
   controllingArea: z.string().min(1, "Required"),
   companyCode: z.string().min(1, "Required"),
@@ -72,8 +84,26 @@ const baseWBSSchema = z.object({
   projectSpec: z.string().optional(),
   motherCode: z.string().optional(),
   comment: z.string().optional(),
-  type: z.enum(["New", "Update", "Lock", "Unlock", "Close"]),
+  type: z.enum([
+    "New",
+    "Update",
+    "Update + Lock",
+    "Update + Unlock",
+    "Lock (only)",
+    "Unlock (only)",
+    "Close (only)",
+    "Complete Technically (only)",
+    "Update + Close"
+  ]),
   region: z.enum(["DE", "NL", "SE", "DK", "UK"]) as z.ZodType<Region>,
+}).superRefine((data, ctx) => {
+  if (["SE", "DK", "UK"].includes(data.region) && (!data.functionalArea || data.functionalArea.trim() === "")) {
+    ctx.addIssue({
+      path: ["functionalArea"],
+      code: z.ZodIssueCode.custom,
+      message: "Functional Area is required for SE, DK, and UK.",
+    });
+  }
 });
 
 const formSchema = z.object({
@@ -89,9 +119,6 @@ interface WBSFormProps {
   onSubmit: (data: WBSFormData[]) => Promise<void>;
   initialData?: WBSFormData[];
 }
-
-// Move type definition to types/index.ts
-export type RegionType = "DE" | "NL" | "SE" | "PL";
 
 // Export the helper functions
 export const getControllingAreaOptions = (region: RegionType) => {
@@ -120,13 +147,21 @@ export const getControllingAreaOptions = (region: RegionType) => {
         { value: "3300", label: "3300 Uppsala Research" },
         { value: "3400", label: "3400 Västerås Power" },
       ];
-    case "PL":
+    case "DK":
       return [
-        { value: "4000", label: "4000 Warsaw Systems" },
-        { value: "4100", label: "4100 Krakow Development" },
-        { value: "4200", label: "4200 Wrocław Engineering" },
-        { value: "4300", label: "4300 Poznań Analytics" },
-        { value: "4400", label: "4400 Gdańsk Maritime" },
+        { value: "4000", label: "4000 Copenhagen Solutions" },
+        { value: "4100", label: "4100 Aarhus Marine" },
+        { value: "4200", label: "4200 Odense Industries" },
+        { value: "4300", label: "4300 Aalborg Research" },
+        { value: "4400", label: "4400 Esbjerg Power" },
+      ];
+    case "UK":
+      return [
+        { value: "5000", label: "5000 London Solutions" },
+        { value: "5100", label: "5100 Manchester Marine" },
+        { value: "5200", label: "5200 Birmingham Industries" },
+        { value: "5300", label: "5300 Edinburgh Research" },
+        { value: "5400", label: "5400 Glasgow Power" },
       ];
     default:
       return [];
@@ -141,23 +176,23 @@ export const getFunctionalAreaOptions = (region: RegionType) => {
         { value: "1002", label: "Quality Control" },
         { value: "1003", label: "Maintenance" },
       ];
-    case "NL":
-      return [
-        { value: "2001", label: "Research" },
-        { value: "2002", label: "Development" },
-        { value: "2003", label: "Testing" },
-      ];
     case "SE":
       return [
-        { value: "3001", label: "Design" },
-        { value: "3002", label: "Innovation" },
-        { value: "3003", label: "Prototyping" },
+        { value: "3001", label: "Nordic Operations" },
+        { value: "3002", label: "Nordic Development" },
+        { value: "3003", label: "Nordic Support" },
       ];
-    case "PL":
+    case "DK":
       return [
-        { value: "4001", label: "Engineering" },
-        { value: "4002", label: "Analysis" },
-        { value: "4003", label: "Implementation" },
+        { value: "4001", label: "Nordic Operations" },
+        { value: "4002", label: "Nordic Development" },
+        { value: "4003", label: "Nordic Support" },
+      ];
+    case "UK":
+      return [
+        { value: "5001", label: "Nordic Operations" },
+        { value: "5002", label: "Nordic Development" },
+        { value: "5003", label: "Nordic Support" },
       ];
     default:
       return [];
@@ -168,27 +203,28 @@ export const getProjectSpecOptions = (region: RegionType) => {
   switch (region) {
     case "DE":
       return [
-        { value: "DE_INV", label: "Industrial Investment" },
-        { value: "DE_RD", label: "Research & Development" },
-        { value: "DE_MAINT", label: "Industrial Maintenance" },
+        { value: "ASSET", label: "Asset" },
+        { value: "INTERNAL", label: "Internal" },
       ];
     case "NL":
       return [
-        { value: "NL_TECH", label: "Technology Innovation" },
-        { value: "NL_GREEN", label: "Green Energy" },
-        { value: "NL_SMART", label: "Smart Solutions" },
+        { value: "ASSET", label: "Asset" },
+        { value: "INTERNAL", label: "Internal" },
       ];
     case "SE":
       return [
-        { value: "SE_SUS", label: "Sustainable Projects" },
-        { value: "SE_DIG", label: "Digital Transformation" },
-        { value: "SE_INNOV", label: "Innovation Hub" },
+        { value: "ASSET", label: "Asset" },
+        { value: "INTERNAL", label: "Internal" },
       ];
-    case "PL":
+    case "DK":
       return [
-        { value: "PL_ENG", label: "Engineering Excellence" },
-        { value: "PL_AUTO", label: "Automation Systems" },
-        { value: "PL_IT", label: "IT Infrastructure" },
+        { value: "ASSET", label: "Asset" },
+        { value: "INTERNAL", label: "Internal" },
+      ];
+    case "UK":
+      return [
+        { value: "ASSET", label: "Asset" },
+        { value: "INTERNAL", label: "Internal" },
       ];
     default:
       return [];
@@ -259,30 +295,40 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
 
   const addWBSItem = () => {
     const newIndex = fields.length;
-    append({
-      type: "New",
-      controllingArea: "",
-      companyCode: "",
-      projectName: "",
-      projectDefinition: "",
-      level: "1",
-      projectType: "",
-      responsiblePCCC: "",
-      planningElement: false,
-      rubricElement: false,
-      billingElement: false,
-      settlementRulePercent: "",
-      settlementRuleGoal: "",
-      responsiblePerson: "",
-      userId: "",
-      employmentNumber: "",
-      functionalArea: "",
-      tgPhase: "",
-      projectSpec: "",
-      motherCode: "",
-      comment: "",
-      region,
-    });
+    // Copy all fields from main WBS except projectName and projectDefinition
+    const mainWBS = watchFieldArray[0];
+    const newWBS = mainWBS
+      ? {
+          ...mainWBS,
+          type: mainWBS.type as WbsTypeOptions,
+          projectName: "",
+          projectDefinition: "",
+        }
+      : {
+          type: "New" as WbsTypeOptions,
+          controllingArea: "",
+          companyCode: "",
+          projectName: "",
+          projectDefinition: "",
+          level: "1",
+          projectType: "",
+          responsiblePCCC: "",
+          planningElement: false,
+          rubricElement: false,
+          billingElement: false,
+          settlementRulePercent: "",
+          settlementRuleGoal: "",
+          responsiblePerson: "",
+          userId: "",
+          employmentNumber: "",
+          functionalArea: "",
+          tgPhase: "",
+          projectSpec: "",
+          motherCode: "",
+          comment: "",
+          region,
+        };
+    append(newWBS);
     // Automatically select the newly added row
     setSelectedRows([...selectedRows, newIndex]);
   };
@@ -379,9 +425,13 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
                   >
                     <option value="New">New</option>
                     <option value="Update">Update</option>
-                    <option value="Lock">Lock</option>
-                    <option value="Unlock">Unlock</option>
-                    <option value="Close">Close</option>
+                    <option value="Update + Lock">Update + Lock</option>
+                    <option value="Update + Unlock">Update + Unlock</option>
+                    <option value="Lock (only)">Lock (only)</option>
+                    <option value="Unlock (only)">Unlock (only)</option>
+                    <option value="Close (only)">Close (only)</option>
+                    <option value="Complete Technically (only)">Complete Technically (only)</option>
+                    <option value="Update + Close">Update + Close</option>
                   </select>
                 </FormControl>
                 <FormMessage />
@@ -644,7 +694,7 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
             )}
           />
         </TableCell>
-        {region === "NL" && (
+        {(region === "SE" || region === "DK" || region === "UK") && (
           <TableCell>
             <FormField
               control={form.control}
@@ -755,31 +805,31 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
               <Table className={tableStyles.table}>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className={tableStyles.type}>Type</TableHead>
-                    <TableHead className={tableStyles.controllingArea}>Controlling Area</TableHead>
-                    <TableHead className={tableStyles.companyCode}>Company Code</TableHead>
-                    <TableHead className={tableStyles.projectName}>Project Name</TableHead>
-                    <TableHead className={tableStyles.projectDefinition}>Project Definition</TableHead>
-                    <TableHead className={tableStyles.level}>Level</TableHead>
-                    <TableHead className={tableStyles.projectType}>Project Type</TableHead>
-                    <TableHead className={tableStyles.responsiblePCCC}>Responsible PC/CC</TableHead>
-                    <TableHead className={tableStyles.checkbox3Col}>Planning Element</TableHead>
-                    <TableHead className={tableStyles.checkbox3Col}>Rubric Element</TableHead>
-                    <TableHead className={tableStyles.checkbox3Col}>Billing Element</TableHead>
+                    <TableHead className={`${tableStyles.type} text-center`}>Type</TableHead>
+                    <TableHead className={`${tableStyles.controllingArea} text-center`}>Controlling Area</TableHead>
+                    <TableHead className={`${tableStyles.companyCode} text-center`}>Company Code</TableHead>
+                    <TableHead className={`${tableStyles.projectName} text-center`}>Project Name</TableHead>
+                    <TableHead className={`${tableStyles.projectDefinition} text-center`}>Project Definition</TableHead>
+                    <TableHead className={`${tableStyles.level} text-center`}>Level</TableHead>
+                    <TableHead className={`${tableStyles.projectType} text-center`}>Project Type</TableHead>
+                    <TableHead className={`${tableStyles.responsiblePCCC} text-center`}>Responsible PC/CC</TableHead>
+                    <TableHead className={`${tableStyles.checkbox3Col} text-center`}>Planning Element</TableHead>
+                    <TableHead className={`${tableStyles.checkbox3Col} text-center`}>Rubric Element</TableHead>
+                    <TableHead className={`${tableStyles.checkbox3Col} text-center`}>Billing Element</TableHead>
                     {region === "NL" && (
                       <>
-                        <TableHead className={tableStyles.settlement}>Settlement Rule %</TableHead>
-                        <TableHead className={tableStyles.settlement}>Settlement Rule Goal</TableHead>
+                        <TableHead className={`${tableStyles.settlement} text-center`}>Settlement Rule %</TableHead>
+                        <TableHead className={`${tableStyles.settlement} text-center`}>Settlement Rule Goal</TableHead>
                       </>
                     )}
-                    <TableHead className={tableStyles.person}>Responsible Person</TableHead>
-                    <TableHead className={tableStyles.person}>User ID</TableHead>
-                    <TableHead className={tableStyles.person}>Employment Number</TableHead>
-                    {region === "NL" && <TableHead className={tableStyles.functionalArea}>Functional Area</TableHead>}
-                    <TableHead className={tableStyles.tgPhase}>TG Phase</TableHead>
-                    <TableHead className={tableStyles.projectSpec}>Project Spec</TableHead>
-                    <TableHead className={tableStyles.motherCode}>Mother Code</TableHead>
-                    <TableHead className={tableStyles.comment}>Comment</TableHead>
+                    <TableHead className={`${tableStyles.person} text-center`}>Responsible Person</TableHead>
+                    <TableHead className={`${tableStyles.person} text-center`}>User ID</TableHead>
+                    <TableHead className={`${tableStyles.person} text-center`}>Employment Number</TableHead>
+                    {(region === "SE" || region === "DK" || region === "UK") && <TableHead className={`${tableStyles.functionalArea} text-center`}>Functional Area</TableHead>}
+                    <TableHead className={`${tableStyles.tgPhase} text-center`}>TG Phase</TableHead>
+                    <TableHead className={`${tableStyles.projectSpec} text-center`}>Project Spec</TableHead>
+                    <TableHead className={`${tableStyles.motherCode} text-center`}>Mother Code</TableHead>
+                    <TableHead className={`${tableStyles.comment} text-center`}>Comment</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -900,31 +950,31 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
                             onCheckedChange={toggleAllRows}
                           />
                         </TableHead>
-                        <TableHead className={tableStyles.type}>Type</TableHead>
-                        <TableHead className={tableStyles.controllingArea}>Controlling Area</TableHead>
-                        <TableHead className={tableStyles.companyCode}>Company Code</TableHead>
-                        <TableHead className={tableStyles.projectName}>Project Name</TableHead>
-                        <TableHead className={tableStyles.projectDefinition}>Project Definition</TableHead>
-                        <TableHead className={tableStyles.level}>Level</TableHead>
-                        <TableHead className={tableStyles.projectType}>Project Type</TableHead>
-                        <TableHead className={tableStyles.responsiblePCCC}>Responsible PC/CC</TableHead>
-                        <TableHead className={tableStyles.checkbox3Col}>Planning Element</TableHead>
-                        <TableHead className={tableStyles.checkbox3Col}>Rubric Element</TableHead>
-                        <TableHead className={tableStyles.checkbox3Col}>Billing Element</TableHead>
+                        <TableHead className={`${tableStyles.type} text-center`}>Type</TableHead>
+                        <TableHead className={`${tableStyles.controllingArea} text-center`}>Controlling Area</TableHead>
+                        <TableHead className={`${tableStyles.companyCode} text-center`}>Company Code</TableHead>
+                        <TableHead className={`${tableStyles.projectName} text-center`}>Project Name</TableHead>
+                        <TableHead className={`${tableStyles.projectDefinition} text-center`}>Project Definition</TableHead>
+                        <TableHead className={`${tableStyles.level} text-center`}>Level</TableHead>
+                        <TableHead className={`${tableStyles.projectType} text-center`}>Project Type</TableHead>
+                        <TableHead className={`${tableStyles.responsiblePCCC} text-center`}>Responsible PC/CC</TableHead>
+                        <TableHead className={`${tableStyles.checkbox3Col} text-center`}>Planning Element</TableHead>
+                        <TableHead className={`${tableStyles.checkbox3Col} text-center`}>Rubric Element</TableHead>
+                        <TableHead className={`${tableStyles.checkbox3Col} text-center`}>Billing Element</TableHead>
                         {region === "NL" && (
                           <>
-                            <TableHead className={tableStyles.settlement}>Settlement Rule %</TableHead>
-                            <TableHead className={tableStyles.settlement}>Settlement Rule Goal</TableHead>
+                            <TableHead className={`${tableStyles.settlement} text-center`}>Settlement Rule %</TableHead>
+                            <TableHead className={`${tableStyles.settlement} text-center`}>Settlement Rule Goal</TableHead>
                           </>
                         )}
-                        <TableHead className={tableStyles.person}>Responsible Person</TableHead>
-                        <TableHead className={tableStyles.person}>User ID</TableHead>
-                        <TableHead className={tableStyles.person}>Employment Number</TableHead>
-                        {region === "NL" && <TableHead className={tableStyles.functionalArea}>Functional Area</TableHead>}
-                        <TableHead className={tableStyles.tgPhase}>TG Phase</TableHead>
-                        <TableHead className={tableStyles.projectSpec}>Project Spec</TableHead>
-                        <TableHead className={tableStyles.motherCode}>Mother Code</TableHead>
-                        <TableHead className={tableStyles.comment}>Comment</TableHead>
+                        <TableHead className={`${tableStyles.person} text-center`}>Responsible Person</TableHead>
+                        <TableHead className={`${tableStyles.person} text-center`}>User ID</TableHead>
+                        <TableHead className={`${tableStyles.person} text-center`}>Employment Number</TableHead>
+                        {(region === "SE" || region === "DK" || region === "UK") && <TableHead className={`${tableStyles.functionalArea} text-center`}>Functional Area</TableHead>}
+                        <TableHead className={`${tableStyles.tgPhase} text-center`}>TG Phase</TableHead>
+                        <TableHead className={`${tableStyles.projectSpec} text-center`}>Project Spec</TableHead>
+                        <TableHead className={`${tableStyles.motherCode} text-center`}>Mother Code</TableHead>
+                        <TableHead className={`${tableStyles.comment} text-center`}>Comment</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

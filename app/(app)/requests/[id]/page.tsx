@@ -6,7 +6,6 @@ import { notFound, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import {
   doc,
-  getDoc,
   updateDoc,
   arrayUnion,
   onSnapshot,
@@ -15,7 +14,13 @@ import {
 import { toast } from "sonner";
 import { db } from "@/lib/firebase/config";
 import { useAuth } from "@/lib/auth";
-import { Request, Comment, Region, RegionType, WBSData } from "@/types";
+import { 
+  Request, 
+  Comment, 
+  RequestStatus,
+  StoredWBSData,
+  RegionType,
+} from "@/types";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -29,18 +34,22 @@ import {
 } from "@/components/ui/card";
 import { AIService } from "@/lib/services/ai-service";
 import { ExportButton } from "@/components/ExportButton";
-import { getControllingAreaOptions, getProjectTypeOptions, getFunctionalAreaOptions, getProjectSpecOptions } from "@/components/forms/WBSForm";
-import type { RegionType as RegionTypeImport } from "@/types";
+import { 
+  getControllingAreaOptions, 
+  getProjectTypeOptions, 
+  getFunctionalAreaOptions, 
+  getProjectSpecOptions 
+} from "@/components/forms/WBSForm";
 
 // Status color mapping
-const statusColors: Record<string, string> = {
+const statusColors: Record<RequestStatus, "default" | "secondary" | "warning" | "success" | "destructive"> = {
   Submitted: "default",
   InProgress: "secondary",
   PendingInfo: "warning",
   ForwardedToSD: "secondary",
   Completed: "success",
   Rejected: "destructive",
-} as const;
+};
 
 interface OptionType {
   value: string;
@@ -48,7 +57,7 @@ interface OptionType {
 }
 
 // Update type guard function
-function isWBSData(data: unknown): data is WBSData[] {
+function isWBSData(data: unknown): data is StoredWBSData[] {
   return Array.isArray(data) && data.length > 0 && 'controllingArea' in data[0];
 }
 
@@ -350,7 +359,7 @@ export default function RequestDetailPage({
                 Submitted on {formatDate(request.createdAt)}
               </CardDescription>
             </div>
-            <Badge variant={statusColors[request.status] as any}>
+            <Badge variant={statusColors[request.status]}>
               {request.status}
             </Badge>
           </div>
