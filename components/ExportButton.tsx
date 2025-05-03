@@ -7,9 +7,11 @@ import type { RegionType } from "@/types";
 export interface ExportButtonProps {
   wbsData: StoredWBSData[];
   region: RegionType;
+  requestName: string;
+  submissionDate: string; // in YYYYMMDD format
 }
 
-export function ExportButton({ wbsData, region }: ExportButtonProps) {
+export function ExportButton({ wbsData, region, requestName, submissionDate }: ExportButtonProps) {
   const handleExport = async () => {
     try {
       const response = await fetch('/api/export-wbs', {
@@ -31,7 +33,8 @@ export function ExportButton({ wbsData, region }: ExportButtonProps) {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `wbs_export_${new Date().toISOString().split('T')[0]}.xlsm`;
+      // Format: MDM WBS YYYYMMDD REGION - REQUESTNAME.xlsm
+      link.download = `MDM WBS ${submissionDate} ${region} - ${requestName}.xlsm`;
       
       // Trigger the download
       document.body.appendChild(link);

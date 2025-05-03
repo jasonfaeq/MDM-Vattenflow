@@ -33,7 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { exportRequestsToCSV } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 
 // Status color mapping
 const statusColors: Record<RequestStatus, "default" | "secondary" | "warning" | "success" | "destructive"> = {
@@ -90,17 +90,16 @@ export default function Dashboard() {
       setFilteredRequests(requests);
       return;
     }
-
     const term = searchTerm.toLowerCase();
     const filtered = requests.filter(
       (request) =>
         request.requestType.toLowerCase().includes(term) ||
         request.region.toLowerCase().includes(term) ||
-        request.status.toLowerCase().includes(term)
+        request.status.toLowerCase().includes(term) ||
+        request.requestName.toLowerCase().includes(term) ||
+        request.id.toLowerCase().includes(term)
     );
-
     setFilteredRequests(filtered);
-    setSearchTerm(term);
   }, [searchTerm, requests]);
 
   const formatDate = (timestamp: Timestamp | Date | null) => {
@@ -114,29 +113,6 @@ export default function Dashboard() {
     return "Invalid date";
   };
 
-  const getTruncatedId = (id: string | undefined) => {
-    if (!id) return "N/A";
-    return id.length > 8 ? `${id.substring(0, 8)}...` : id;
-  };
-
-  const exportToCsv = () => {
-    try {
-      // Use the filtered requests if filtering is applied, otherwise use all requests
-      const dataToExport =
-        filteredRequests.length > 0 ? filteredRequests : requests;
-
-      // Create a filename with the current date
-      const date = new Date().toISOString().split("T")[0];
-      const filename = `my-requests-${date}.csv`;
-
-      exportRequestsToCSV(dataToExport, filename);
-      toast.success("Requests exported successfully");
-    } catch (error) {
-      console.error("Export error:", error);
-      toast.error("Failed to export data");
-    }
-  };
-
   return (
     <div className="space-y-6">
       <Card>
@@ -145,19 +121,19 @@ export default function Dashboard() {
             <CardTitle>My Requests</CardTitle>
             <CardDescription>View and manage your MDM requests</CardDescription>
           </div>
-          <Button onClick={exportToCsv} variant="outline" size="sm">
-            Export to CSV
+          <Button asChild variant="default">
+            <Link href="/requests/new">+ New Request</Link>
           </Button>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-between mb-4">
-            <div className="flex space-x-2">
-              <Button asChild variant="default">
-                <Link href="/requests/new">+ New Request</Link>
-              </Button>
-            </div>
+          <div className="flex items-center gap-4 mb-4">
+            <Input
+              placeholder="Search by ID, type, region, status, name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-md"
+            />
           </div>
-
           {loading ? (
             <div className="py-8 text-center">Loading your requests...</div>
           ) : filteredRequests.length === 0 ? (
@@ -170,31 +146,29 @@ export default function Dashboard() {
             <Table>
               <TableCaption>List of your MDM requests</TableCaption>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Request ID</TableHead>
-                  <TableHead>Type</TableHead>
+                <TableRow className="bg-gradient-to-r from-[#ffe066] via-[#fffbe6] to-[#ffd600]">
+                  <TableHead className="w-64">Request ID</TableHead>
+                  <TableHead className="w-24 text-center">Type</TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead>Region</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="w-24 text-center">Region</TableHead>
+                  <TableHead className="w-28 text-center">Status</TableHead>
+                  <TableHead className="w-38 text-center">Created</TableHead>
+                  <TableHead className="w-38 text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredRequests.map((request) => (
                   <TableRow key={request.id}>
-                    <TableCell>{getTruncatedId(request.id)}</TableCell>
+                    <TableCell className="text-xs break-all w-64">{request.id}</TableCell>
                     <TableCell>{request.requestType}</TableCell>
                     <TableCell>{request.requestName}</TableCell>
-                    <TableCell>{request.region}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={statusColors[request.status]}
-                      >
+                    <TableCell className="w-24 text-center">{request.region}</TableCell>
+                    <TableCell className="w-28 text-center">
+                      <Badge variant={statusColors[request.status]}>
                         {request.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{formatDate(request.createdAt)}</TableCell>
+                    <TableCell className="w-32 text-center">{formatDate(request.createdAt)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Button asChild variant="ghost" size="sm">

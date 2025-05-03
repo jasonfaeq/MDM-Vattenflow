@@ -149,6 +149,7 @@ export interface Request {
   id: string;
   requesterId: string;
   requesterEmail: string;
+  requesterDisplayName?: string;
   requestName: string;
   requestType: RequestType;
   region: Region;

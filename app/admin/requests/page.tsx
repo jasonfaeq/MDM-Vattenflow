@@ -116,7 +116,8 @@ export default function AdminRequestsPage() {
       request.requestType.toLowerCase().includes(searchValue) ||
       request.region.toLowerCase().includes(searchValue) ||
       request.requesterEmail.toLowerCase().includes(searchValue) ||
-      request.status.toLowerCase().includes(searchValue)
+      request.status.toLowerCase().includes(searchValue) ||
+      request.requestName.toLowerCase().includes(searchValue)
     );
   });
 
@@ -143,7 +144,7 @@ export default function AdminRequestsPage() {
         <h1 className="text-2xl font-bold">All Requests (Admin)</h1>
         <div className="flex items-center gap-4">
           <Input
-            placeholder="Search by ID, type, region, email..."
+            placeholder="Search by ID, type, region, name, requester..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="max-w-md"
@@ -195,13 +196,11 @@ export default function AdminRequestsPage() {
               <TableBody>
                 {filteredRequests.map((request) => (
                   <TableRow key={request.id}>
-                    <TableCell className="font-medium">
-                      {request.id ? `${request.id.slice(0, 8)}...` : "Unknown"}
-                    </TableCell>
+                    <TableCell className="text-xs break-all w-64">{request.id}</TableCell>
                     <TableCell>{request.requestType}</TableCell>
                     <TableCell>{request.requestName}</TableCell>
                     <TableCell>{request.region}</TableCell>
-                    <TableCell>{request.requesterEmail}</TableCell>
+                    <TableCell>{request.requesterDisplayName || request.requesterEmail}</TableCell>
                     <TableCell>
                       <Badge variant={statusColors[request.status]}>
                         {request.status}

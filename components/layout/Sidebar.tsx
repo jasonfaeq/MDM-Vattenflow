@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
   FileText,
-  List,
   Settings,
   ShieldAlert,
   Book,
@@ -27,12 +26,7 @@ const routes = [
     icon: FileText,
   },
   {
-    label: "My Requests",
-    href: "/requests",
-    icon: List,
-  },
-  {
-    label: "Settings",
+    label: "Role Switch (Demo Only)",
     href: "/settings",
     icon: Settings,
   },
@@ -49,25 +43,17 @@ interface SidebarProps {
 
 export function Sidebar({ isAdmin = false }: SidebarProps) {
   const pathname = usePathname();
-  console.log(pathname);
 
   return (
-    <div className="space-y-4 py-4 flex flex-col h-full bg-secondary/10">
+    <div className="space-y-4 py-4 flex flex-col h-full bg-gradient-to-br from-[#0057b8]/90 via-[#ffd600]/10 to-[#f6f8fa]/0">
       <div className="px-3 py-2 flex-1">
-        <Link 
-          href="/dashboard" 
-          className="flex items-center pl-3 mb-14 gap-4 group hover:opacity-90 transition-opacity"
-        >
-          <Logo className="w-8 h-8" />
-          <div className="flex flex-col">
-            <span className="text-lg font-bold tracking-wide leading-none">
-              VATTEN
-            </span>
-            <span className="text-lg font-light tracking-wider leading-none text-muted-foreground">
-              FLOW
-            </span>
+        <div className="flex flex-col items-center justify-center mb-12 py-8 rounded-xl">
+          <Logo className="w-16 h-16 mb-2" />
+          <div className="flex flex-col items-center">
+            <span className="text-2xl font-extrabold tracking-widest text-[#0057b8] drop-shadow-sm leading-none">VATTEN</span>
+            <span className="text-2xl font-extrabold tracking-widest text-[#ffd600] drop-shadow-sm leading-none -mt-1">FLOW</span>
           </div>
-        </Link>
+        </div>
         <Separator className="mb-4" />
 
         <div className="space-y-1">

@@ -466,8 +466,7 @@ export default function AdminRequestDetailPage({
                 <span className="block text-lg font-normal mt-1">{request.requestName}</span>
               </CardTitle>
               <CardDescription>
-                Submitted on {formatDate(request.createdAt)} by{" "}
-                {request.requesterEmail}
+                Submitted on {formatDate(request.createdAt)} by {request.requesterDisplayName || request.requesterEmail}
               </CardDescription>
             </div>
             <Badge variant={statusColors[request.status]}>

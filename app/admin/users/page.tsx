@@ -7,7 +7,6 @@ import {
   getDocs,
   doc,
   updateDoc,
-  where,
   orderBy,
   deleteDoc,
 } from "firebase/firestore";
@@ -17,8 +16,7 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
-  CardFooter,
+  CardTitle
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,21 +41,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import {
   User,
-  UserPlus,
   UserCheck,
   Search,
-  Filter,
   RefreshCw,
   Download,
   Info,
   Mail,
-  Clock,
   Trash2,
 } from "lucide-react";
 import { UserRole } from "@/types";
@@ -331,9 +326,14 @@ export default function UsersPage() {
 
       toast.success("User created successfully");
       form.reset(defaultValues);
-    } catch (error: any) {
-      console.error("Error creating user:", error);
-      toast.error(error.message || "Failed to create user");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Error creating user:", error);
+        toast.error(error.message || "Failed to create user");
+      } else {
+        console.error("Error creating user:", error);
+        toast.error("Failed to create user");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -503,29 +503,13 @@ export default function UsersPage() {
               <h3 className="font-semibold mb-2">User Roles</h3>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <span className="font-medium">User:</span> Can submit and
+                  <span className="font-medium">Controller:</span> Can submit and
                   track their own requests
                 </li>
                 <li>
-                  <span className="font-medium">Approver:</span> Can review and
-                  approve/reject requests for their region
-                </li>
-                <li>
-                  <span className="font-medium">Admin:</span> Full system access
+                  <span className="font-medium">MDM:</span> Full system access
                   including user management
                 </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-2">Regional Access</h3>
-              <ul className="space-y-2 text-sm">
-                <li>
-                  Users can only submit requests for their assigned region
-                </li>
-                <li>
-                  Approvers can only manage requests from their assigned region
-                </li>
-                <li>Admins have access to all regions</li>
               </ul>
             </div>
           </CardContent>
@@ -591,7 +575,7 @@ export default function UsersPage() {
       <Card>
         <CardHeader>
           <CardTitle>Users</CardTitle>
-          <CardDescription className="flex justify-between items-center">
+          <div className="flex justify-between items-center">
             <span>Manage user accounts and roles</span>
             <Tabs
               value={activeTab}
@@ -606,7 +590,7 @@ export default function UsersPage() {
                 <TabsTrigger value="mdm">MDM Admins</TabsTrigger>
               </TabsList>
             </Tabs>
-          </CardDescription>
+          </div>
         </CardHeader>
         <CardContent>
           {loading ? (

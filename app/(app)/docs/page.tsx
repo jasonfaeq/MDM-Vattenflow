@@ -146,21 +146,21 @@ export default function DocsPage() {
             <CardContent>
               <div className="space-y-6">
                 <div>
-                  <h3 className="font-semibold mb-2">Profit Center Requests</h3>
+                  <h3 className="font-semibold mb-2">WBS Requests</h3>
                   <ol className="list-decimal list-inside space-y-2">
-                    <li>Submit new PC request with required details</li>
-                    <li>Regional manager review</li>
-                    <li>Financial approval if needed</li>
-                    <li>Final validation and activation</li>
+                    <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                    <li>Phasellus euismod, urna eu tincidunt consectetur, nisi nisl aliquam enim.</li>
+                    <li>Curabitur ac velit nec massa facilisis cursus.</li>
+                    <li>Donec vitae sapien ut libero venenatis faucibus.</li>
                   </ol>
                 </div>
                 <div>
-                  <h3 className="font-semibold mb-2">Cost Center Requests</h3>
+                  <h3 className="font-semibold mb-2">PC/CC Requests</h3>
                   <ol className="list-decimal list-inside space-y-2">
-                    <li>Create CC request with budget information</li>
-                    <li>Department head approval</li>
-                    <li>Budget verification</li>
-                    <li>System registration</li>
+                    <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                    <li>Phasellus euismod, urna eu tincidunt consectetur, nisi nisl aliquam enim.</li>
+                    <li>Curabitur ac velit nec massa facilisis cursus.</li>
+                    <li>Donec vitae sapien ut libero venenatis faucibus.</li>
                   </ol>
                 </div>
               </div>

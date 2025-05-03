@@ -190,13 +190,61 @@ export default function RequestDetailPage({
 
     // For bulk WBS, render a table
     if (isWBSData(data)) {
+      // Build exportData with controllingAreaLabel for each WBS element
+      const exportData = data.map((wbs) => {
+        const controllingAreaOption = getControllingAreaOptions(request.region as RegionType)
+          .find((option: OptionType) => option.value === wbs.controllingArea);
+
+        // Determine region label
+        let regionLabel = "";
+        if (request.region === "DE") regionLabel = "Germany";
+        else if (request.region === "NL") regionLabel = "Netherlands";
+        else regionLabel = "Nordic";
+
+        // Get the full project spec label
+        const projectSpecOption = getProjectSpecOptions(request.region as RegionType)
+          .find((option: OptionType) => option.value === wbs.projectSpec);
+        const projectSpecLabel = projectSpecOption ? projectSpecOption.label : wbs.projectSpec;
+
+        // Get the full functional area label
+        const functionalAreaOption = getFunctionalAreaOptions(request.region as RegionType)
+          .find((option: OptionType) => option.value === wbs.functionalArea);
+        const functionalAreaLabel = functionalAreaOption ? functionalAreaOption.label : wbs.functionalArea;
+
+        return {
+          ...wbs,
+          controllingAreaLabel: controllingAreaOption ? controllingAreaOption.label : wbs.controllingArea,
+          regionLabel,
+          requesterDisplayName: request.requesterDisplayName || request.requesterEmail,
+          projectSpec: projectSpecLabel,
+          functionalArea: functionalAreaLabel,
+        };
+      });
       return (
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <p className="font-medium">WBS Elements ({data.length} items)</p>
             <ExportButton 
-              wbsData={data} 
+              wbsData={exportData} 
               region={request.region as RegionType}
+              requestName={request.requestName}
+              submissionDate={
+                (() => {
+                  const d = request.createdAt;
+                  let dateObj;
+                  if (d && typeof d === 'object' && 'toDate' in d) {
+                    dateObj = d.toDate();
+                  } else if (d && typeof d === 'object' && Object.prototype.toString.call(d) === '[object Date]') {
+                    dateObj = d;
+                  } else {
+                    dateObj = new Date();
+                  }
+                  const yyyy = dateObj.getFullYear();
+                  const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+                  const dd = String(dateObj.getDate()).padStart(2, '0');
+                  return `${yyyy}${mm}${dd}`;
+                })()
+              }
             />
           </div>
           <div className="overflow-x-auto">
@@ -223,7 +271,7 @@ export default function RequestDetailPage({
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Responsible Person</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User ID</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employment Number</th>
-                  {request.region === "NL" && (
+                  {(request.region === "NL" || request.region === "SE" || request.region === "DK" || request.region === "UK") && (
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Functional Area</th>
                   )}
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TG Phase</th>
@@ -244,10 +292,10 @@ export default function RequestDetailPage({
                     .find((option: OptionType) => option.value === wbs.projectType);
                   const projectTypeLabel = projectTypeOption ? projectTypeOption.label : wbs.projectType;
 
-                  // Get the full functional area label if in NL region
-                  const functionalAreaOption = request.region === "NL" ? 
-                    getFunctionalAreaOptions(request.region as RegionType)
-                      .find((option: OptionType) => option.value === wbs.functionalArea) : null;
+                  // Get the full functional area label for all supported regions
+                  const functionalAreaOption = (request.region === "NL" || request.region === "SE" || request.region === "DK" || request.region === "UK")
+                    ? getFunctionalAreaOptions(request.region as RegionType).find((option: OptionType) => option.value === wbs.functionalArea)
+                    : null;
                   const functionalAreaLabel = functionalAreaOption ? functionalAreaOption.label : wbs.functionalArea;
 
                   // Get the full project spec label
@@ -277,7 +325,7 @@ export default function RequestDetailPage({
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.responsiblePerson}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.userId}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.employmentNumber}</td>
-                      {request.region === "NL" && (
+                      {(request.region === "NL" || request.region === "SE" || request.region === "DK" || request.region === "UK") && (
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{functionalAreaLabel}</td>
                       )}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.tgPhase}</td>
@@ -373,7 +421,7 @@ export default function RequestDetailPage({
               </div>
               <div>
                 <p className="text-sm font-medium">Requester</p>
-                <p>{request.requesterEmail}</p>
+                <p>{request.requesterDisplayName || request.requesterEmail}</p>
               </div>
             </div>
 

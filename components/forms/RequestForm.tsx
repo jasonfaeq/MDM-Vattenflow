@@ -102,6 +102,7 @@ export default function RequestForm({ initialData, onSubmitSuccess, isAdmin = fa
       const requestData = {
         requesterId: user.uid,
         requesterEmail: user.email,
+        requesterDisplayName: user.displayName,
         requestType: formValues.requestType as RequestType,
         region: formValues.region as Region,
         requestName: formValues.requestName,
@@ -153,6 +154,7 @@ export default function RequestForm({ initialData, onSubmitSuccess, isAdmin = fa
       const requestData = {
         requesterId: user.uid,
         requesterEmail: user.email,
+        requesterDisplayName: user.displayName,
         requestType: formValues.requestType as RequestType,
         region: formValues.region as Region,
         requestName: formValues.requestName,

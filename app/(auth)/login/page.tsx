@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,7 +8,6 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -37,9 +36,15 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export default function LoginPage() {
-  const { signIn } = useAuth();
+  const { signIn, user, loading } = useAuth();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.push("/dashboard");
+    }
+  }, [user, loading, router]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -53,7 +58,6 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await signIn(data.email, data.password);
-      router.push("/dashboard");
     } catch (error) {
       console.error("Login error:", error);
       toast.error("Failed to sign in. Please check your credentials.");
@@ -63,53 +67,70 @@ export default function LoginPage() {
   };
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold">MDM - Vattenflow</CardTitle>
-        <CardDescription>
-          Enter your credentials to access the platform
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="email@vattenfall.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign In"}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-      <CardFooter className="flex justify-center border-t pt-4">
-        <p className="text-sm text-muted-foreground">
-          For account requests, please contact the MDM team
-        </p>
-      </CardFooter>
-    </Card>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-muted/10 relative">
+      {/* Logo Section */}
+      <div className="absolute top-10 flex flex-col items-center w-full select-none">
+        <div className="flex items-center gap-3 mb-2">
+          {/* Orange/Blue Circle */}
+          <span className="inline-block w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 via-yellow-500 to-blue-600 shadow-lg border-2 border-white" />
+          <span className="text-3xl font-extrabold tracking-tight text-primary drop-shadow-sm">VATTEN <span className="text-blue-700">FLOW</span></span>
+        </div>
+        <span className="text-muted-foreground text-sm tracking-wide">Master Data Management</span>
+      </div>
+
+      {/* Login Card */}
+      <Card className="w-full max-w-md shadow-2xl border-0 rounded-2xl bg-white/90 backdrop-blur-md">
+        <CardHeader className="space-y-1 text-center">
+          <CardTitle className="text-2xl font-bold tracking-tight">Sign in to Vattenflow</CardTitle>
+          <CardDescription>
+            Enter your credentials to access the platform
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="email@vattenfall.com" {...field} autoComplete="email" className="rounded-lg px-4 py-2 border focus:ring-2 focus:ring-blue-500" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="••••••••" {...field} autoComplete="current-password" className="rounded-lg px-4 py-2 border focus:ring-2 focus:ring-blue-500" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full py-2 rounded-lg text-lg font-semibold shadow-md bg-gradient-to-r from-blue-700 to-yellow-400 hover:from-blue-800 hover:to-yellow-500 transition-colors duration-200" disabled={isLoading}>
+                {isLoading ? "Signing in..." : "Sign In"}
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+        <CardFooter className="flex flex-col items-center border-t pt-4 gap-2 bg-white/60 rounded-b-2xl">
+          <p className="text-sm text-muted-foreground">
+            For account requests, please contact the MDM team
+          </p>
+        </CardFooter>
+      </Card>
+      {/* Subtle background accent */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-yellow-100 via-blue-100 to-transparent rounded-full opacity-30 blur-3xl" />
+      </div>
+    </div>
   );
 }
