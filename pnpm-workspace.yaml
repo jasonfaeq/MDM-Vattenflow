@@ -1,5 +1,0 @@
-ignoredBuiltDependencies:
-  - sharp
-onlyBuiltDependencies:
-  - '@firebase/util'
-  - protobufjs
