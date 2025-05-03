@@ -24,7 +24,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useState } from "react";
-import { getControllingAreaOptions, getFunctionalAreaOptions, RegionType } from "./WBSForm";
+import { getControllingAreaOptions, getFunctionalAreaOptions } from "./WBSForm";
+import type { RegionType } from "@/types";
 
 const basePCCCSchema = z.object({
   type: z.enum(["New", "Update", "Lock", "Unlock", "Close"]),
