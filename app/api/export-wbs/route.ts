@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       wbsDataPath,
     ]);
 
-    return await new Promise((resolve, reject) => {
+    return new Promise<Response>((resolve, reject) => {
       pythonProcess.on('close', (code) => {
         if (code === 0) {
           try {
