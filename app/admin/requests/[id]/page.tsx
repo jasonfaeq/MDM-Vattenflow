@@ -6,14 +6,10 @@ import { notFound, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import {
   doc,
-  getDoc,
   updateDoc,
   arrayUnion,
   Timestamp,
   onSnapshot,
-  query,
-  collection,
-  where,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { useAuth } from "@/lib/auth";
@@ -25,7 +21,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -39,7 +34,6 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { AIService } from "@/lib/services/ai-service";
-import { Bot } from "lucide-react";
 import { AiButton } from "@/components/ui/ai-button";
 
 // Status color mapping
@@ -51,6 +45,38 @@ const statusColors: Record<RequestStatus, "default" | "secondary" | "warning" | 
   Completed: "success",
   Rejected: "destructive",
 };
+
+// Define the StoredWBSData type for type assertion
+interface StoredWBSData {
+  type: string;
+  controllingArea: string;
+  companyCode: string;
+  projectName: string;
+  projectDefinition: string;
+  level: string;
+  responsiblePCCC: string;
+  planningElement?: boolean;
+  rubricElement?: boolean;
+  billingElement?: boolean;
+}
+
+// Type guard for StoredWBSData
+function isStoredWBSData(wbs: unknown): wbs is StoredWBSData {
+  return (
+    typeof wbs === "object" &&
+    wbs !== null &&
+    "type" in wbs &&
+    "controllingArea" in wbs &&
+    "companyCode" in wbs &&
+    "projectName" in wbs &&
+    "projectDefinition" in wbs &&
+    "level" in wbs &&
+    "responsiblePCCC" in wbs &&
+    "planningElement" in wbs &&
+    "rubricElement" in wbs &&
+    "billingElement" in wbs
+  );
+}
 
 export default function AdminRequestDetailPage({
   params,
@@ -378,18 +404,18 @@ export default function AdminRequestDetailPage({
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {data.map((wbs, index) => (
+                {(data.filter(isStoredWBSData) as StoredWBSData[]).map((w: StoredWBSData, index: number) => (
                   <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.type}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.controllingArea}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.companyCode}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.projectName}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.projectDefinition}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.level}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.responsiblePCCC}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.planningElement ? 'Yes' : 'No'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.rubricElement ? 'Yes' : 'No'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.billingElement ? 'Yes' : 'No'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.type}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.controllingArea}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.companyCode}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.projectName}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.projectDefinition}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.level}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.responsiblePCCC}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.planningElement ? 'Yes' : 'No'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.rubricElement ? 'Yes' : 'No'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.billingElement ? 'Yes' : 'No'}</td>
                   </tr>
                 ))}
               </tbody>
