@@ -58,10 +58,9 @@ type FormValues = z.infer<typeof formSchema>;
 interface RequestFormProps {
   initialData?: Request;
   onSubmitSuccess?: () => void;
-  isAdmin?: boolean;
 }
 
-export default function RequestForm({ initialData, onSubmitSuccess, isAdmin = false }: RequestFormProps) {
+export default function RequestForm({ initialData, onSubmitSuccess }: RequestFormProps) {
   const { user } = useAuth();
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -120,7 +119,7 @@ export default function RequestForm({ initialData, onSubmitSuccess, isAdmin = fa
         toast.success("Request updated successfully!");
       } else {
         // Create new request
-        await addDoc(collection(db, "requests"), {
+        const docRef = await addDoc(collection(db, "requests"), {
           ...requestData,
           createdAt: serverTimestamp() as Timestamp,
           comments: [],
@@ -128,10 +127,10 @@ export default function RequestForm({ initialData, onSubmitSuccess, isAdmin = fa
           history: [],
         });
         toast.success("Request submitted successfully!");
+        onSubmitSuccess?.();
+        router.push(`/requests/${docRef.id}`);
+        return;
       }
-
-      onSubmitSuccess?.();
-      router.push(isAdmin ? "/admin/requests" : "/requests");
     } catch (error) {
       console.error("Error submitting request:", error);
       toast.error("Failed to submit request. Please try again.");
@@ -172,7 +171,7 @@ export default function RequestForm({ initialData, onSubmitSuccess, isAdmin = fa
         toast.success("Request updated successfully!");
       } else {
         // Create new request
-        await addDoc(collection(db, "requests"), {
+        const docRef = await addDoc(collection(db, "requests"), {
           ...requestData,
           createdAt: serverTimestamp() as Timestamp,
           comments: [],
@@ -180,10 +179,10 @@ export default function RequestForm({ initialData, onSubmitSuccess, isAdmin = fa
           history: [],
         });
         toast.success("Request submitted successfully!");
+        onSubmitSuccess?.();
+        router.push(`/requests/${docRef.id}`);
+        return;
       }
-
-      onSubmitSuccess?.();
-      router.push(isAdmin ? "/admin/requests" : "/requests");
     } catch (error) {
       console.error("Error submitting request:", error);
       toast.error("Failed to submit request. Please try again.");

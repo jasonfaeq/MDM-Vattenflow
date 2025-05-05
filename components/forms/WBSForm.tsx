@@ -420,7 +420,7 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
                 <FormControl>
                   <select
                     {...field}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-2 border rounded bg-input text-foreground border-input placeholder:text-muted-foreground"
                     autoComplete="off"
                   >
                     <option value="New">New</option>
@@ -448,7 +448,7 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
                 <FormControl>
                   <select
                     {...field}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-2 border rounded bg-input text-foreground border-input placeholder:text-muted-foreground"
                     autoComplete="off"
                   >
                     <option value="">Select Controlling Area</option>
@@ -485,7 +485,7 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Input {...field} placeholder="Project Name" autoComplete="off" />
+                  <Input {...field} placeholder="Project Name" autoComplete="off" maxLength={40}/>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -515,7 +515,7 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
                 <FormControl>
                   <select
                     {...field}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-2 border rounded bg-input text-foreground border-input placeholder:text-muted-foreground"
                     autoComplete="off"
                   >
                     <option value="1">1</option>
@@ -539,7 +539,7 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
                 <FormControl>
                   <select
                     {...field}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-2 border rounded bg-input text-foreground border-input placeholder:text-muted-foreground"
                     autoComplete="off"
                   >
                     <option value="">Select Project Type</option>
@@ -704,7 +704,7 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
                   <FormControl>
                     <select
                       {...field}
-                      className="w-full p-2 border rounded"
+                      className="w-full p-2 border rounded bg-input text-foreground border-input placeholder:text-muted-foreground"
                       autoComplete="off"
                     >
                       <option value="">Select Functional Area</option>
@@ -744,7 +744,7 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
                 <FormControl>
                   <select
                     {...field}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-2 border rounded bg-input text-foreground border-input placeholder:text-muted-foreground"
                     autoComplete="off"
                   >
                     <option value="">Select Project Spec</option>

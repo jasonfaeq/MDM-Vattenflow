@@ -79,7 +79,7 @@ export default function LoginPage() {
       </div>
 
       {/* Login Card */}
-      <Card className="w-full max-w-md shadow-2xl border-0 rounded-2xl bg-white/90 backdrop-blur-md">
+      <Card className="w-full max-w-md shadow-2xl border-0 rounded-2xl bg-card/90 backdrop-blur-md">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl font-bold tracking-tight">Sign in to Vattenflow</CardTitle>
           <CardDescription>
@@ -96,7 +96,7 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="email@vattenfall.com" {...field} autoComplete="email" className="rounded-lg px-4 py-2 border focus:ring-2 focus:ring-blue-500" />
+                      <Input placeholder="email@vattenfall.com" {...field} autoComplete="email" className="rounded-lg px-4 py-2 border focus:ring-2 focus:ring-blue-500 bg-input text-foreground" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -109,7 +109,7 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} autoComplete="current-password" className="rounded-lg px-4 py-2 border focus:ring-2 focus:ring-blue-500" />
+                      <Input type="password" placeholder="••••••••" {...field} autoComplete="current-password" className="rounded-lg px-4 py-2 border focus:ring-2 focus:ring-blue-500 bg-input text-foreground" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -121,7 +121,7 @@ export default function LoginPage() {
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="flex flex-col items-center border-t pt-4 gap-2 bg-white/60 rounded-b-2xl">
+        <CardFooter className="flex flex-col items-center border-t pt-4 gap-2 bg-card/60 rounded-b-2xl">
           <p className="text-sm text-muted-foreground">
             For account requests, please contact the MDM team
           </p>
@@ -129,7 +129,7 @@ export default function LoginPage() {
       </Card>
       {/* Subtle background accent */}
       <div className="absolute inset-0 pointer-events-none z-0">
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-yellow-100 via-blue-100 to-transparent rounded-full opacity-30 blur-3xl" />
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-yellow-200 via-blue-200 to-transparent dark:from-blue-900 dark:via-yellow-900 dark:to-transparent rounded-full opacity-30 blur-3xl" />
       </div>
     </div>
   );
