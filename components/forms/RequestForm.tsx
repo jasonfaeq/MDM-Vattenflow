@@ -58,14 +58,20 @@ type FormValues = z.infer<typeof formSchema>;
 interface RequestFormProps {
   initialData?: Request;
   onSubmitSuccess?: () => void;
+  isAdmin?: boolean; // Add this line
 }
 
-export default function RequestForm({ initialData, onSubmitSuccess }: RequestFormProps) {
+export default function RequestForm({ initialData, onSubmitSuccess, isAdmin }: RequestFormProps) {
   const { user } = useAuth();
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [formValues, setFormValues] = useState<FormValues | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Example usage of isAdmin
+  if (isAdmin) {
+    console.log("Admin is editing the request");
+  }
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),

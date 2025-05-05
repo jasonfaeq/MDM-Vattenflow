@@ -15,7 +15,7 @@ interface PageProps {
 }
 
 export default function AdminEditRequestPage({ params }: PageProps) {
-  const { id: requestId } = React.use(params);
+  const { id: requestId } = params;
   const { user } = useAuth();
   const router = useRouter();
   const [request, setRequest] = useState<Request | null>(null);
@@ -61,4 +61,4 @@ export default function AdminEditRequestPage({ params }: PageProps) {
   }
 
   return <RequestForm initialData={request} isAdmin={true} />;
-} 
+}
