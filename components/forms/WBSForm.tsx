@@ -377,19 +377,44 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
   };
 
   const handleMatchData = () => {
-    const sourceRow = watchFieldArray[selectedRows[0]];
-    if (!sourceRow) return;
-
-    selectedRows.slice(1).forEach((targetIndex) => {
+    // Ensure at least one additional row is selected
+    if (selectedRows.length === 0) {
+      console.error("No rows selected to match data.");
+      return;
+    }
+  
+    // Ensure at least one field is selected
+    if (selectedFields.length === 0) {
+      console.error("No fields selected for matching.");
+      return;
+    }
+  
+    // Use the Main WBS Element (first row) as the source
+    const sourceRow = watchFieldArray[0];
+    if (!sourceRow) {
+      console.error("Main WBS Element not found.");
+      return;
+    }
+  
+    console.log("Source Row (Main WBS):", sourceRow);
+    console.log("Selected Rows:", selectedRows);
+    console.log("Selected Fields:", selectedFields);
+  
+    // Copy data from the Main WBS Element to the selected rows
+    selectedRows.forEach((targetIndex) => {
       selectedFields.forEach((field) => {
-        form.setValue(`bulkWBS.${targetIndex}.${field}`, sourceRow[field]);
+        const value = sourceRow[field];
+        console.log(`Copying field "${field}" with value "${value}" to row ${targetIndex}`);
+        form.setValue(`bulkWBS.${targetIndex}.${field}`, value);
       });
     });
-
+  
+    // Clear selections and close the dialog
     setSelectedRows([]);
     setSelectedFields([]);
     setIsMatchDialogOpen(false);
   };
+  
 
   const renderWBSRow = (index: number, showSelect: boolean = true) => {
     const row = watchFieldArray[index];
