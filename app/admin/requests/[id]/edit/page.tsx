@@ -15,7 +15,11 @@ interface PageProps {
 }
 
 export default function AdminEditRequestPage({ params }: PageProps) {
-  const { id: requestId } = params;
+  const [requestId, setRequestId] = useState<string | null>(null);
+
+  useEffect(() => {
+    params.then(({ id }) => setRequestId(id));
+  }, [params]);
   const { user } = useAuth();
   const router = useRouter();
   const [request, setRequest] = useState<Request | null>(null);
@@ -30,6 +34,10 @@ export default function AdminEditRequestPage({ params }: PageProps) {
       return;
     }
 
+    if (!requestId) {
+      setLoading(false);
+      return;
+    }
     const requestRef = doc(db, "requests", requestId);
     const unsubscribe = onSnapshot(
       requestRef,
@@ -51,6 +59,10 @@ export default function AdminEditRequestPage({ params }: PageProps) {
 
     return () => unsubscribe();
   }, [requestId, router, user]);
+
+  if (!requestId) {
+    return <div className="flex justify-center p-4">Loading request ID...</div>;
+  }
 
   if (loading) {
     return <div className="flex justify-center p-4">Loading request...</div>;
