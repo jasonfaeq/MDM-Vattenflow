@@ -4,6 +4,8 @@ A web-based internal tool for managing WBS and Cost Center change requests—bui
 
 > 🚀 Originally prototyped inside Vattenfall, this version demonstrates a generic, public-facing version for showcasing architecture, validation logic, and full-stack design.
 
+Live Version: https://mdm-vattenflow.vercel.app/
+
 ---
 
 ## 🔍 Overview
@@ -18,6 +20,22 @@ Traditional workflows for WBS and Cost Center management often rely on Excel tem
 - Automated request tracking
 - Excel-compatible export with macro-safe templates
 - Real-time status updates between Controllers and Admins
+
+---
+
+## 📸 Screenshots
+
+### 🧾 My Requests – Controller Dashboard  
+![My Requests](./docs/My-Requests.png)
+
+### ➕ Create New Request  
+![Create Request](./docs/Create-Request.png)
+
+### 🛠️ Admin Panel – Request Management  
+![Admin Panel](./docs/Admin-Panel.png)
+
+### 📊 AI-Powered Analytics (Prototype)  
+![AI Analysis](./docs/AI-Analysis.png)
 
 ---
 
