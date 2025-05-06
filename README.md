@@ -78,4 +78,6 @@ Traditional workflows for WBS and Cost Center management often rely on Excel tem
 | Controller | johndoe@vattenflow.com | 123456     |
 | Admin      | Message me please for Admin privileges. |
 
+Note: The Export to Excel feature currently needs a VM for xlwings to properly export to an Excel pre-assigned template with Macros attached, which was required for the project. Hence, it won't function on this version.
+
 ---
