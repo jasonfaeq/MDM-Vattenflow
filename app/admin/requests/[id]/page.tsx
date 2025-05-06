@@ -35,6 +35,13 @@ import {
 import { toast } from "sonner";
 import { AIService } from "@/lib/services/ai-service";
 import { AiButton } from "@/components/ui/ai-button";
+import { ExportButton } from "@/components/ExportButton";
+import {
+  getControllingAreaOptions,
+  getProjectTypeOptions,
+  getFunctionalAreaOptions,
+  getProjectSpecOptions,
+} from "@/components/forms/WBSForm";
 
 // Status color mapping
 const statusColors: Record<RequestStatus, "default" | "secondary" | "warning" | "success" | "destructive"> = {
@@ -58,6 +65,10 @@ interface StoredWBSData {
   planningElement?: boolean;
   rubricElement?: boolean;
   billingElement?: boolean;
+  projectType?: string;
+  region?: string;
+  functionalArea?: string;
+  projectSpec?: string;
 }
 
 // Type guard for StoredWBSData
@@ -74,7 +85,11 @@ function isStoredWBSData(wbs: unknown): wbs is StoredWBSData {
     "responsiblePCCC" in wbs &&
     "planningElement" in wbs &&
     "rubricElement" in wbs &&
-    "billingElement" in wbs
+    "billingElement" in wbs &&
+    "projectType" in wbs &&
+    "region" in wbs &&
+    "functionalArea" in wbs &&
+    "projectSpec" in wbs
   );
 }
 
@@ -361,11 +376,6 @@ export default function AdminRequestDetailPage({
     }
   };
 
-  const handleExport = async () => {
-    // Placeholder for export functionality
-    toast.info("Export functionality will be implemented");
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -474,9 +484,63 @@ export default function AdminRequestDetailPage({
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Admin - Request Management</h1>
         <div className="flex space-x-2">
-          <Button variant="outline" onClick={handleExport}>
-            Export
-          </Button>
+          {/* Only show ExportButton for WBS requests with array data */}
+          {request && request.requestType === 'WBS' && Array.isArray(request.submittedData) && (
+            (() => {
+              // Build exportData with controllingAreaLabel and other labels for each WBS element
+              const exportData = (request.submittedData.filter(isStoredWBSData) as StoredWBSData[]).map((wbs) => {
+                const controllingAreaOption = getControllingAreaOptions(request.region).find(option => option.value === wbs.controllingArea);
+                const controllingAreaLabel = controllingAreaOption ? controllingAreaOption.label : wbs.controllingArea;
+                const projectTypeOption = getProjectTypeOptions(request.region).find(option => option.value === (wbs.projectType || ""));
+                const projectTypeLabel = projectTypeOption ? projectTypeOption.label : wbs.projectType;
+                const functionalAreaOption = getFunctionalAreaOptions(request.region).find(option => option.value === (wbs.functionalArea || ""));
+                const functionalAreaLabel = functionalAreaOption ? functionalAreaOption.label : wbs.functionalArea;
+                const projectSpecOption = getProjectSpecOptions(request.region).find(option => option.value === (wbs.projectSpec || ""));
+                const projectSpecLabel = projectSpecOption ? projectSpecOption.label : wbs.projectSpec;
+                return {
+                  ...wbs,
+                  controllingArea: controllingAreaLabel,
+                  projectType: projectTypeLabel || "",
+                  functionalArea: functionalAreaLabel || "",
+                  projectSpec: projectSpecLabel || "",
+                  region: request.region,
+                  type: wbs.type as (
+                    | "New"
+                    | "Update"
+                    | "Update + Lock"
+                    | "Update + Unlock"
+                    | "Lock (only)"
+                    | "Unlock (only)"
+                    | "Close (only)"
+                    | "Complete Technically (only)"
+                    | "Update + Close"
+                  ),
+                };
+              });
+              return (
+                <ExportButton
+                  wbsData={exportData}
+                  region={request.region}
+                  requestName={request.requestName}
+                  submissionDate={(() => {
+                    const d = request.createdAt;
+                    let dateObj;
+                    if (d && typeof d === 'object' && 'toDate' in d) {
+                      dateObj = d.toDate();
+                    } else if (d && typeof d === 'object' && Object.prototype.toString.call(d) === '[object Date]') {
+                      dateObj = d;
+                    } else {
+                      dateObj = new Date();
+                    }
+                    const yyyy = dateObj.getFullYear();
+                    const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+                    const dd = String(dateObj.getDate()).padStart(2, '0');
+                    return `${yyyy}${mm}${dd}`;
+                  })()}
+                />
+              );
+            })()
+          )}
           <Button asChild variant="outline">
             <Link href="/admin/dashboard">Back to Dashboard</Link>
           </Button>

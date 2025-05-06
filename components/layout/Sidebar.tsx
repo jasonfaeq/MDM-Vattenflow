@@ -26,7 +26,7 @@ const routes = [
     icon: FileText,
   },
   {
-    label: "Role Switch (Demo Only)",
+    label: "User Information",
     href: "/settings",
     icon: Settings,
   },
