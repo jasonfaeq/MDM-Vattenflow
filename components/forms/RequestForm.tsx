@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/lib/auth";
 import { db } from "@/lib/firebase/config";
-import { collection, addDoc, updateDoc, doc, Timestamp, serverTimestamp } from "firebase/firestore";
+import { collection, updateDoc, doc, Timestamp, serverTimestamp, query, where, getDocs, setDoc } from "firebase/firestore";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -124,17 +124,28 @@ export default function RequestForm({ initialData, onSubmitSuccess, isAdmin }: R
         });
         toast.success("Request updated successfully!");
       } else {
-        // Create new request
-        const docRef = await addDoc(collection(db, "requests"), {
+        // Create new request with custom ID
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const datePrefix = `${yyyy}${mm}${dd}`;
+        const requestsRef = collection(db, 'requests');
+        const q = query(requestsRef, where("createdDate", "==", datePrefix));
+        const snapshot = await getDocs(q);
+        const countToday = snapshot.size + 1;
+        const requestId = `${datePrefix}${String(countToday).padStart(3, '0')}`;
+        await setDoc(doc(db, 'requests', requestId), {
           ...requestData,
           createdAt: serverTimestamp() as Timestamp,
+          createdDate: datePrefix,
           comments: [],
           internalComments: [],
           history: [],
         });
         toast.success("Request submitted successfully!");
         onSubmitSuccess?.();
-        router.push(`/requests/${docRef.id}`);
+        router.push(`/requests/${requestId}`);
         return;
       }
     } catch (error) {
@@ -176,17 +187,28 @@ export default function RequestForm({ initialData, onSubmitSuccess, isAdmin }: R
         });
         toast.success("Request updated successfully!");
       } else {
-        // Create new request
-        const docRef = await addDoc(collection(db, "requests"), {
+        // Create new request with custom ID
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const datePrefix = `${yyyy}${mm}${dd}`;
+        const requestsRef = collection(db, 'requests');
+        const q = query(requestsRef, where("createdDate", "==", datePrefix));
+        const snapshot = await getDocs(q);
+        const countToday = snapshot.size + 1;
+        const requestId = `${datePrefix}${String(countToday).padStart(3, '0')}`;
+        await setDoc(doc(db, 'requests', requestId), {
           ...requestData,
           createdAt: serverTimestamp() as Timestamp,
+          createdDate: datePrefix,
           comments: [],
           internalComments: [],
           history: [],
         });
         toast.success("Request submitted successfully!");
         onSubmitSuccess?.();
-        router.push(`/requests/${docRef.id}`);
+        router.push(`/requests/${requestId}`);
         return;
       }
     } catch (error) {
@@ -203,8 +225,8 @@ export default function RequestForm({ initialData, onSubmitSuccess, isAdmin }: R
       case "WBS":
         return <WBSForm 
           region={formValues.region as Region} 
-          onSubmit={submitWBSRequest}
-          initialData={initialData?.submittedData as WBSData[]} 
+          onSubmit={submitWBSRequest as any} // Type assertion to fix type mismatch
+          initialData={initialData?.submittedData as any} // Type assertion to fix type mismatch
         />;
       case "PCCC":
         return <PCCCForm 

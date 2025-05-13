@@ -1,57 +1,145 @@
-import xlwings as xw
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+import openpyxl
 import os
-import sys
+import tempfile
 import json
+from fastapi.responses import StreamingResponse
+import io
+import sys
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def fill_excel_template(template_path, output_path, wbs_data):
-    app = xw.App(visible=False)
-    wb = app.books.open(os.path.abspath(template_path))
-    ws = wb.sheets['Shared Template']
+    wb = openpyxl.load_workbook(template_path, keep_vba=True)
+    ws = wb['Shared Template']
     start_row = 18
-
-    # Set Business Controller (D7) to the requester's name from the first element
-    ws.range('D7').value = wbs_data[0].get('requesterDisplayName', '')
-    # Set Business Responsible (D8) to the responsible person from the first element
-    ws.range('D8').value = wbs_data[0].get('responsiblePerson', '')
+    ws['D7'] = wbs_data[0].get('requesterDisplayName', '') if wbs_data else ''
+    ws['D8'] = wbs_data[0].get('responsiblePerson', '') if wbs_data else ''
+    # Helper to write integer if possible
+    def write_int(ws, row, col, value):
+        try:
+            if value is not None and value != '':
+                ws.cell(row=row, column=col, value=int(value))
+            else:
+                ws.cell(row=row, column=col, value=value)
+        except Exception:
+            ws.cell(row=row, column=col, value=value)
 
     for i, element in enumerate(wbs_data):
         row = start_row + i
-        ws.range((row, 1)).value = element.get('regionLabel', '')  # Region / language
-        ws.range((row, 2)).value = element.get('type', '')  # Kind of change to process
-        ws.range((row, 3)).value = 'KIS'               # System
-        ws.range((row, 4)).value = element.get('controllingAreaLabel', element.get('controllingArea', ''))
-        ws.range((row, 5)).value = element.get('companyCode', '')
-        ws.range((row, 6)).value = element.get('projectName', '')
-        ws.range((row, 7)).value = element.get('projectDefinition', '')
-        ws.range((row, 8)).value = element.get('level', '')
-        ws.range((row, 9)).value = element.get('projectType', '')
-        ws.range((row, 10)).value = ''  # Investment profile
-        ws.range((row, 11)).value = element.get('responsiblePCCC', '')
-        ws.range((row, 12)).value = element.get('responsiblePCCC', '')
-        ws.range((row, 13)).value = 'x' if element.get('planningElement') else ''
-        ws.range((row, 14)).value = 'x' if element.get('rubricElement') else ''
-        ws.range((row, 15)).value = 'x' if element.get('billingElement') else ''
+        ws.cell(row=row, column=1, value=element.get('regionLabel', ''))
+        ws.cell(row=row, column=2, value=element.get('type', ''))
+        ws.cell(row=row, column=3, value=element.get('system', 'KIS'))
+        ws.cell(row=row, column=4, value=element.get('controllingAreaLabel', element.get('controllingArea', '')))
+        write_int(ws, row, 5, element.get('companyCode', ''))
+        ws.cell(row=row, column=6, value=element.get('projectName', ''))
+        ws.cell(row=row, column=7, value=element.get('projectDefinition', ''))
+        write_int(ws, row, 8, element.get('level', ''))
+        ws.cell(row=row, column=9, value=element.get('projectType', ''))
+        write_int(ws, row, 10, element.get('investmentProfile', ''))
+        write_int(ws, row, 11, element.get('responsibleProfitCenter', ''))
+        write_int(ws, row, 12, element.get('responsibleCostCenter', ''))
+        ws.cell(row=row, column=13, value='x' if element.get('planningElement') else '')
+        ws.cell(row=row, column=14, value='x' if element.get('rubricElement') else '')
+        ws.cell(row=row, column=15, value='x' if element.get('billingElement') else '')
         percent = element.get('settlementRulePercent', '')
         if percent not in ('', None):
             try:
-                ws.range((row, 16)).value = float(percent) / 100
+                ws.cell(row=row, column=16, value=float(percent) / 100)
             except Exception:
-                ws.range((row, 16)).value = percent
+                ws.cell(row=row, column=16, value=percent)
         else:
-            ws.range((row, 16)).value = ''
-        ws.range((row, 17)).value = element.get('settlementRuleGoal', '')
-        ws.range((row, 19)).value = element.get('responsiblePerson', '')
-        ws.range((row, 20)).value = element.get('userId', '')
-        ws.range((row, 21)).value = element.get('employmentNumber', '')
-        ws.range((row, 22)).value = element.get('functionalArea', '')
-        ws.range((row, 24)).value = element.get('comment', '')
-        ws.range((row, 26)).value = element.get('tgPhase', '')
-        ws.range((row, 27)).value = element.get('projectSpec', '')
-        ws.range((row, 28)).value = element.get('motherCode', '')
+            ws.cell(row=row, column=16, value='')
+        ws.cell(row=row, column=17, value=element.get('settlementRuleGoal', ''))
+        ws.cell(row=row, column=18, value=element.get('projectProfile', ''))
+        ws.cell(row=row, column=19, value=element.get('responsiblePerson', ''))
+        ws.cell(row=row, column=20, value=element.get('userId', ''))
+        ws.cell(row=row, column=21, value=element.get('employmentNumber', ''))
+        ws.cell(row=row, column=22, value=element.get('functionalArea', ''))
+        ws.cell(row=row, column=24, value=element.get('comment', ''))
+        ws.cell(row=row, column=25, value=element.get('tm1Project', ''))
+        ws.cell(row=row, column=26, value=element.get('tgPhase', ''))
+        ws.cell(row=row, column=27, value=element.get('projectSpec', ''))
+        ws.cell(row=row, column=28, value=element.get('motherCode', ''))
+    wb.save(output_path)
 
-    wb.save(os.path.abspath(output_path))
-    wb.close()
-    app.quit()
+@app.post("/export")
+async def export_excel(payload: dict):
+    wbs_data = payload.get("wbsData", [])
+    try:
+        template_path = os.path.join(os.path.dirname(__file__), 'templates', 'wbs_template_actual.xlsm')
+        wb = openpyxl.load_workbook(template_path, keep_vba=True)
+        ws = wb['Shared Template']
+        start_row = 18
+        ws['D7'] = wbs_data[0].get('requesterDisplayName', '') if wbs_data else ''
+        ws['D8'] = wbs_data[0].get('responsiblePerson', '') if wbs_data else ''
+        # Helper to write integer if possible
+        def write_int(ws, row, col, value):
+            try:
+                if value is not None and value != '':
+                    ws.cell(row=row, column=col, value=int(value))
+                else:
+                    ws.cell(row=row, column=col, value=value)
+            except Exception:
+                ws.cell(row=row, column=col, value=value)
+
+        for i, element in enumerate(wbs_data):
+            row = start_row + i
+            ws.cell(row=row, column=1, value=element.get('regionLabel', ''))
+            ws.cell(row=row, column=2, value=element.get('type', ''))
+            ws.cell(row=row, column=3, value=element.get('system', 'KIS'))
+            ws.cell(row=row, column=4, value=element.get('controllingAreaLabel', element.get('controllingArea', '')))
+            write_int(ws, row, 5, element.get('companyCode', ''))
+            ws.cell(row=row, column=6, value=element.get('projectName', ''))
+            ws.cell(row=row, column=7, value=element.get('projectDefinition', ''))
+            write_int(ws, row, 8, element.get('level', ''))
+            ws.cell(row=row, column=9, value=element.get('projectType', ''))
+            write_int(ws, row, 10, element.get('investmentProfile', ''))
+            write_int(ws, row, 11, element.get('responsibleProfitCenter', ''))
+            write_int(ws, row, 12, element.get('responsibleCostCenter', ''))
+            ws.cell(row=row, column=13, value='x' if element.get('planningElement') else '')
+            ws.cell(row=row, column=14, value='x' if element.get('rubricElement') else '')
+            ws.cell(row=row, column=15, value='x' if element.get('billingElement') else '')
+            percent = element.get('settlementRulePercent', '')
+            if percent not in ('', None):
+                try:
+                    ws.cell(row=row, column=16, value=float(percent) / 100)
+                except Exception:
+                    ws.cell(row=row, column=16, value=percent)
+            else:
+                ws.cell(row=row, column=16, value='')
+            ws.cell(row=row, column=17, value=element.get('settlementRuleGoal', ''))
+            ws.cell(row=row, column=18, value=element.get('projectProfile', ''))
+            ws.cell(row=row, column=19, value=element.get('responsiblePerson', ''))
+            ws.cell(row=row, column=20, value=element.get('userId', ''))
+            ws.cell(row=row, column=21, value=element.get('employmentNumber', ''))
+            ws.cell(row=row, column=22, value=element.get('functionalArea', ''))
+            ws.cell(row=row, column=24, value=element.get('comment', ''))
+            ws.cell(row=row, column=25, value=element.get('tm1Project', ''))
+            ws.cell(row=row, column=26, value=element.get('tgPhase', ''))
+            ws.cell(row=row, column=27, value=element.get('projectSpec', ''))
+            ws.cell(row=row, column=28, value=element.get('motherCode', ''))
+        with tempfile.NamedTemporaryFile(suffix='.xlsm', delete=False) as tmp:
+            wb.save(tmp.name)
+            tmp.seek(0)
+            excel_data = tmp.read()
+        os.unlink(tmp.name)
+        return StreamingResponse(
+            io.BytesIO(excel_data),
+            media_type="application/vnd.ms-excel.sheet.macroEnabled.12",
+            headers={"Content-Disposition": "attachment; filename=wbs_export.xlsm"}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == '__main__':
     if len(sys.argv) != 4:

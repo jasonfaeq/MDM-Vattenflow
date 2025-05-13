@@ -38,6 +38,7 @@ const tableStyles = {
   projectDefinition: "w-[200px] min-w-[200px]",
   level: "w-[100px] min-w-[100px]",
   responsiblePCCC: "w-[160px] min-w-[160px]",
+  investmentProfile: "w-[160px] min-w-[160px]",
   checkbox3Col: "w-[120px] min-w-[120px]",
   settlement: "w-[150px] min-w-[150px]",
   person: "w-[200px] min-w-[200px]",
@@ -47,6 +48,9 @@ const tableStyles = {
   motherCode: "w-[150px] min-w-[150px]",
   comment: "w-[200px] min-w-[200px]",
   projectType: "w-[120px] min-w-[120px]",
+  system: "w-[120px] min-w-[120px]",
+  projectProfile: "w-[160px] min-w-[160px]",
+  tm1Project: "w-[150px] min-w-[150px]",
 } as const;
 
 // Define WBS type options as a union type
@@ -68,9 +72,13 @@ const baseWBSSchema = z.object({
   projectDefinition: z.string().min(1, "Required"),
   level: z.string().min(1, "Required"),
   projectType: z.string().min(1, "Required"),
-  responsiblePCCC: z.string()
+  investmentProfile: z.string().optional(),
+  responsibleProfitCenter: z.string()
     .min(1, "Required")
-    .regex(/^\d{8}$/, "Responsible PC/CC must be exactly 8 digits"),
+    .regex(/^\d{8}$/, "Responsible Profit Center must be exactly 8 digits"),
+  responsibleCostCenter: z.string()
+    .min(1, "Required")
+    .regex(/^\d{8}$/, "Responsible Cost Center must be exactly 8 digits"),
   planningElement: z.boolean().optional(),
   rubricElement: z.boolean().optional(),
   billingElement: z.boolean().optional(),
@@ -95,7 +103,10 @@ const baseWBSSchema = z.object({
     "Complete Technically (only)",
     "Update + Close"
   ]),
+  system: z.string().optional(),
   region: z.enum(["DE", "NL", "SE", "DK", "UK"]) as z.ZodType<Region>,
+  projectProfile: z.string().optional(),
+  tm1Project: z.string().optional(),
 }).superRefine((data, ctx) => {
   if (["SE", "DK", "UK"].includes(data.region) && (!data.functionalArea || data.functionalArea.trim() === "")) {
     ctx.addIssue({
@@ -125,43 +136,44 @@ export const getControllingAreaOptions = (region: RegionType) => {
   switch (region) {
     case "DE":
       return [
-        { value: "1000", label: "1000 Berlin Manufacturing" },
-        { value: "1100", label: "1100 Hamburg Logistics" },
-        { value: "1200", label: "1200 Munich Electronics" },
-        { value: "1300", label: "1300 Frankfurt Services" },
-        { value: "1400", label: "1400 Stuttgart Research" },
+        { value: "6000", label: "6000 Vattenfall Holding" },
+        { value: "6010", label: "6010 Waste" },
+        { value: "6017", label: "6017 Holding Beteiligungen" },
+        { value: "6018", label: "6018 Kernkraftwerke" },
+        { value: "6100", label: "6100 Heat Beteiligungen" },
+        { value: "6200", label: "6200 Service Unit" },
+        { value: "6204", label: "6204 VASA" },
+        { value: "6205", label: "6205 Windkraft GmbH" },
+        { value: "6250", label: "6250 Distribution" },
+        { value: "6300", label: "6300 Wärme AG" },
+        { value: "6500", label: "6500 Sales" },
       ];
     case "NL":
       return [
-        { value: "2000", label: "2000 Amsterdam Tech" },
-        { value: "2100", label: "2100 Rotterdam Port" },
-        { value: "2200", label: "2200 Eindhoven Innovation" },
-        { value: "2300", label: "2300 Utrecht Digital" },
-        { value: "2400", label: "2400 Groningen Energy" },
+        { value: "5000", label: "5000 CO-gebied Vattenfall NL" },
+        { value: "5002", label: "5002 CO-gebied Netbeheer" },
+        { value: "5003", label: "5003 CO-gebied overig" },
       ];
     case "SE":
-      return [
-        { value: "3000", label: "3000 Stockholm Solutions" },
-        { value: "3100", label: "3100 Gothenburg Marine" },
-        { value: "3200", label: "3200 Malmö Industries" },
-        { value: "3300", label: "3300 Uppsala Research" },
-        { value: "3400", label: "3400 Västerås Power" },
-      ];
     case "DK":
-      return [
-        { value: "4000", label: "4000 Copenhagen Solutions" },
-        { value: "4100", label: "4100 Aarhus Marine" },
-        { value: "4200", label: "4200 Odense Industries" },
-        { value: "4300", label: "4300 Aalborg Research" },
-        { value: "4400", label: "4400 Esbjerg Power" },
-      ];
     case "UK":
       return [
-        { value: "5000", label: "5000 London Solutions" },
-        { value: "5100", label: "5100 Manchester Marine" },
-        { value: "5200", label: "5200 Birmingham Industries" },
-        { value: "5300", label: "5300 Edinburgh Research" },
-        { value: "5400", label: "5400 Glasgow Power" },
+        { value: "1XX", label: "1XX SLR within Vattenfall AB" },
+        { value: "2036", label: "2036 Vf Services Nordic AB" },
+        { value: "2052", label: "2052 Vf BusinessServicesNord." },
+        { value: "207X", label: "207X Nuclear plant D21" },
+        { value: "20XX", label: "20XX Subsidiary EUR" },
+        { value: "21XX", label: "21XX Vattenfall Hydro" },
+        { value: "22XX", label: "22XX Subsidiary SEK" },
+        { value: "23XX", label: "23XX Subsidiary GBP" },
+        { value: "2453", label: "2453 Forsmarks Kraftgrupp AB" },
+        { value: "2460", label: "2460 Vattenfall Nuclear Fuel A" },
+        { value: "25XX", label: "25XX Business Area Grid" },
+        { value: "298X", label: "298X Subsidiary DKK" },
+        { value: "3100", label: "3100 Associated company SEK" },
+        { value: "3300", label: "3300 Associated company Euro" },
+        { value: "8120", label: "8120 VAB Mega Branch Norway" },
+        { value: "9901", label: "9901 External companies DK" },
       ];
     default:
       return [];
@@ -170,30 +182,45 @@ export const getControllingAreaOptions = (region: RegionType) => {
 
 export const getFunctionalAreaOptions = (region: RegionType) => {
   switch (region) {
+    case "SE":
+    case "DK":
+    case "UK":
+      return [
+        { value: "4010", label: "4010 OPC Oper & mainte" },
+        { value: "4015", label: "4015 MAC Maint/distr" },
+        { value: "4017", label: "4017 MAC Maint/distri extra" },
+        { value: "4018", label: "4018 MAC Breakdown" },
+        { value: "4020", label: "4020 Fuel" },
+        { value: "4030", label: "4030 Fees and taxes" },
+        { value: "4125", label: "4125 Bilateral purchase," },
+        { value: "4135", label: "4135 Bilateral purchase," },
+        { value: "4200", label: "4200 Transmission costs" },
+        { value: "4220", label: "4220 Purch. for re-sel gas/oil" },
+        { value: "4230", label: "4230 CON Cost of contr work" },
+        { value: "4235", label: "4235 ECW Cost of consulting" },
+        { value: "4240", label: "4240 ODC Other direct costs" },
+        { value: "4280", label: "4280 COP Cost of other produc" },
+        { value: "4285", label: "4285 ODC Oth operating expe" },
+        { value: "4400", label: "4400 COP Thermal purchase" },
+        { value: "4510", label: "4510 RAD Research & Develop" },
+        { value: "4511", label: "4511 RAD R&D Renewable teknik" },
+        { value: "4513", label: "4513 RAD Other R&D" },
+        { value: "4515", label: "4515 RAD R&D new prod & serv" },
+        { value: "4520", label: "4520 SEO Selling expen" },
+        { value: "4522", label: "4522 CMR Cost Measur/repor" },
+        { value: "4525", label: "4525 ADM Admin exp" },
+        { value: "1810", label: "1810 INV Investments" },
+        { value: "1810M", label: "1810 INV Maint. Invest" },
+        { value: "1850", label: "1850 Expand Investments" },
+      ];
     case "DE":
       return [
         { value: "1001", label: "Production" },
         { value: "1002", label: "Quality Control" },
         { value: "1003", label: "Maintenance" },
       ];
-    case "SE":
-      return [
-        { value: "3001", label: "Nordic Operations" },
-        { value: "3002", label: "Nordic Development" },
-        { value: "3003", label: "Nordic Support" },
-      ];
-    case "DK":
-      return [
-        { value: "4001", label: "Nordic Operations" },
-        { value: "4002", label: "Nordic Development" },
-        { value: "4003", label: "Nordic Support" },
-      ];
-    case "UK":
-      return [
-        { value: "5001", label: "Nordic Operations" },
-        { value: "5002", label: "Nordic Development" },
-        { value: "5003", label: "Nordic Support" },
-      ];
+    case "NL":
+      return [];
     default:
       return [];
   }
@@ -205,26 +232,31 @@ export const getProjectSpecOptions = (region: RegionType) => {
       return [
         { value: "ASSET", label: "Asset" },
         { value: "INTERNAL", label: "Internal" },
+        { value: "DEPARTMENT", label: "Department" },
       ];
     case "NL":
       return [
         { value: "ASSET", label: "Asset" },
         { value: "INTERNAL", label: "Internal" },
+        { value: "DEPARTMENT", label: "Department" },
       ];
     case "SE":
       return [
         { value: "ASSET", label: "Asset" },
         { value: "INTERNAL", label: "Internal" },
+        { value: "DEPARTMENT", label: "Department" },
       ];
     case "DK":
       return [
         { value: "ASSET", label: "Asset" },
         { value: "INTERNAL", label: "Internal" },
+        { value: "DEPARTMENT", label: "Department" },
       ];
     case "UK":
       return [
         { value: "ASSET", label: "Asset" },
         { value: "INTERNAL", label: "Internal" },
+        { value: "DEPARTMENT", label: "Department" },
       ];
     default:
       return [];
@@ -236,12 +268,29 @@ export const getProjectTypeOptions = (region: RegionType) => {
     return [
       { value: "OPEX", label: "OPEX" },
       { value: "CAPEX", label: "CAPEX" },
+      { value: "COMBI", label: "COMBI" },
     ];
   }
   return [
     { value: "Result", label: "Result" },
     { value: "Investment", label: "Investment" },
   ];
+};
+
+// Helper to get region label
+const getRegionLabel = (region: RegionType) => {
+  switch (region) {
+    case "NL":
+      return "Netherlands";
+    case "DE":
+      return "Germany";
+    case "SE":
+    case "DK":
+    case "UK":
+      return "Nordics";
+    default:
+      return region;
+  }
 };
 
 export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps) {
@@ -262,7 +311,9 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
           projectDefinition: "",
           level: "1",
           projectType: "",
-          responsiblePCCC: "",
+          investmentProfile: "",
+          responsibleProfitCenter: "",
+          responsibleCostCenter: "",
           planningElement: false,
           rubricElement: false,
           billingElement: false,
@@ -277,6 +328,9 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
           motherCode: "",
           comment: "",
           region,
+          system: "",
+          projectProfile: "",
+          tm1Project: "",
         },
       ],
     },
@@ -303,6 +357,9 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
           type: mainWBS.type as WbsTypeOptions,
           projectName: "",
           projectDefinition: "",
+          // Copy system from main, but always set level to '2'
+          system: mainWBS.system,
+          level: "2",
         }
       : {
           type: "New" as WbsTypeOptions,
@@ -310,9 +367,11 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
           companyCode: "",
           projectName: "",
           projectDefinition: "",
-          level: "1",
+          level: "2",
           projectType: "",
-          responsiblePCCC: "",
+          responsibleProfitCenter: "",
+          responsibleCostCenter: "",
+          investmentProfile: "",
           planningElement: false,
           rubricElement: false,
           billingElement: false,
@@ -327,6 +386,9 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
           motherCode: "",
           comment: "",
           region,
+          system: "",
+          projectProfile: "",
+          tm1Project: "",
         };
     append(newWBS);
     // Automatically select the newly added row
@@ -352,7 +414,9 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
     { field: "controllingArea", label: "Controlling Area" },
     { field: "companyCode", label: "Company Code" },
     { field: "level", label: "Level" },
-    { field: "responsiblePCCC", label: "Responsible PC/CC" },
+    { field: "investmentProfile", label: "Investment Profile" },
+    { field: "responsibleProfitCenter", label: "Responsible Profit Center" },
+    { field: "responsibleCostCenter", label: "Responsible Cost Center" },
     { field: "planningElement", label: "Planning Element" },
     { field: "rubricElement", label: "Rubric Element" },
     { field: "billingElement", label: "Billing Element" },
@@ -366,6 +430,8 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
     { field: "projectSpec", label: "Project Spec" },
     { field: "motherCode", label: "Mother Code" },
     { field: "comment", label: "Comment" },
+    { field: "projectProfile", label: "Project Profile" },
+    { field: "tm1Project", label: "TM1 Project" },
   ];
 
   const toggleField = (field: keyof WBSFormData) => {
@@ -437,6 +503,13 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
           </TableCell>
         )}
         <TableCell>
+          <Input
+            value={getRegionLabel(region as RegionType)}
+            disabled
+            className="bg-muted text-muted-foreground cursor-not-allowed"
+          />
+        </TableCell>
+        <TableCell>
           <FormField
             control={form.control}
             name={`bulkWBS.${index}.type`}
@@ -457,6 +530,30 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
                     <option value="Close (only)">Close (only)</option>
                     <option value="Complete Technically (only)">Complete Technically (only)</option>
                     <option value="Update + Close">Update + Close</option>
+                  </select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </TableCell>
+        <TableCell>
+          <FormField
+            control={form.control}
+            name={`bulkWBS.${index}.system`}
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <select
+                    {...field}
+                    className="w-full p-2 border rounded bg-input text-foreground border-input placeholder:text-muted-foreground"
+                    autoComplete="off"
+                  >
+                    <option value="">Choose</option>
+                    <option value="KIS">KIS</option>
+                    <option value="K1Q">K1Q</option>
+                    <option value="D20">D20</option>
+                    <option value="D21">D21</option>
                   </select>
                 </FormControl>
                 <FormMessage />
@@ -583,11 +680,39 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
         <TableCell>
           <FormField
             control={form.control}
-            name={`bulkWBS.${index}.responsiblePCCC`}
+            name={`bulkWBS.${index}.investmentProfile`}
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Input {...field} placeholder="Responsible PC/CC" autoComplete="off" />
+                  <Input {...field} placeholder="Investment Profile" autoComplete="off" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </TableCell>
+        <TableCell>
+          <FormField
+            control={form.control}
+            name={`bulkWBS.${index}.responsibleProfitCenter`}
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Input {...field} placeholder="Responsible Profit Center" autoComplete="off" maxLength={8} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </TableCell>
+        <TableCell>
+          <FormField
+            control={form.control}
+            name={`bulkWBS.${index}.responsibleCostCenter`}
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Input {...field} placeholder="Responsible Cost Center" autoComplete="off" maxLength={8} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -677,6 +802,34 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
             </TableCell>
           </>
         )}
+                <TableCell>
+          <FormField
+            control={form.control}
+            name={`bulkWBS.${index}.projectProfile`}
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Input {...field} placeholder="Project Profile" autoComplete="off" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </TableCell>
+        <TableCell>
+          <FormField
+            control={form.control}
+            name={`bulkWBS.${index}.tm1Project`}
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Input {...field} placeholder="TM1 Project" autoComplete="off" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </TableCell>
         <TableCell>
           <FormField
             control={form.control}
@@ -830,14 +983,18 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
               <Table className={tableStyles.table}>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-[120px] min-w-[120px] text-center">Region</TableHead>
                     <TableHead className={`${tableStyles.type} text-center`}>Type</TableHead>
+                    <TableHead className={`${tableStyles.system} text-center`}>System</TableHead>
                     <TableHead className={`${tableStyles.controllingArea} text-center`}>Controlling Area</TableHead>
                     <TableHead className={`${tableStyles.companyCode} text-center`}>Company Code</TableHead>
                     <TableHead className={`${tableStyles.projectName} text-center`}>Project Name</TableHead>
                     <TableHead className={`${tableStyles.projectDefinition} text-center`}>Project Definition</TableHead>
                     <TableHead className={`${tableStyles.level} text-center`}>Level</TableHead>
                     <TableHead className={`${tableStyles.projectType} text-center`}>Project Type</TableHead>
-                    <TableHead className={`${tableStyles.responsiblePCCC} text-center`}>Responsible PC/CC</TableHead>
+                    <TableHead className={`${tableStyles.investmentProfile} text-center`}>Investment Profile</TableHead>
+                    <TableHead className={`${tableStyles.responsiblePCCC} text-center`}>Responsible Profit Center</TableHead>
+                    <TableHead className={`${tableStyles.responsiblePCCC} text-center`}>Responsible Cost Center</TableHead>
                     <TableHead className={`${tableStyles.checkbox3Col} text-center`}>Planning Element</TableHead>
                     <TableHead className={`${tableStyles.checkbox3Col} text-center`}>Rubric Element</TableHead>
                     <TableHead className={`${tableStyles.checkbox3Col} text-center`}>Billing Element</TableHead>
@@ -847,6 +1004,8 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
                         <TableHead className={`${tableStyles.settlement} text-center`}>Settlement Rule Goal</TableHead>
                       </>
                     )}
+                    <TableHead className={`${tableStyles.projectProfile} text-center`}>Project Profile</TableHead>
+                    <TableHead className={`${tableStyles.tm1Project} text-center`}>TM1 Project</TableHead>
                     <TableHead className={`${tableStyles.person} text-center`}>Responsible Person</TableHead>
                     <TableHead className={`${tableStyles.person} text-center`}>User ID</TableHead>
                     <TableHead className={`${tableStyles.person} text-center`}>Employment Number</TableHead>
@@ -975,14 +1134,18 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
                             onCheckedChange={toggleAllRows}
                           />
                         </TableHead>
+                        <TableHead className="w-[120px] min-w-[120px] text-center">Region</TableHead>
                         <TableHead className={`${tableStyles.type} text-center`}>Type</TableHead>
+                        <TableHead className={`${tableStyles.system} text-center`}>System</TableHead>
                         <TableHead className={`${tableStyles.controllingArea} text-center`}>Controlling Area</TableHead>
                         <TableHead className={`${tableStyles.companyCode} text-center`}>Company Code</TableHead>
                         <TableHead className={`${tableStyles.projectName} text-center`}>Project Name</TableHead>
                         <TableHead className={`${tableStyles.projectDefinition} text-center`}>Project Definition</TableHead>
                         <TableHead className={`${tableStyles.level} text-center`}>Level</TableHead>
                         <TableHead className={`${tableStyles.projectType} text-center`}>Project Type</TableHead>
-                        <TableHead className={`${tableStyles.responsiblePCCC} text-center`}>Responsible PC/CC</TableHead>
+                        <TableHead className={`${tableStyles.investmentProfile} text-center`}>Investment Profile</TableHead>
+                        <TableHead className={`${tableStyles.responsiblePCCC} text-center`}>Responsible Profit Center</TableHead>
+                        <TableHead className={`${tableStyles.responsiblePCCC} text-center`}>Responsible Cost Center</TableHead>
                         <TableHead className={`${tableStyles.checkbox3Col} text-center`}>Planning Element</TableHead>
                         <TableHead className={`${tableStyles.checkbox3Col} text-center`}>Rubric Element</TableHead>
                         <TableHead className={`${tableStyles.checkbox3Col} text-center`}>Billing Element</TableHead>
@@ -992,6 +1155,8 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
                             <TableHead className={`${tableStyles.settlement} text-center`}>Settlement Rule Goal</TableHead>
                           </>
                         )}
+                        <TableHead className={`${tableStyles.projectProfile} text-center`}>Project Profile</TableHead>
+                        <TableHead className={`${tableStyles.tm1Project} text-center`}>TM1 Project</TableHead>
                         <TableHead className={`${tableStyles.person} text-center`}>Responsible Person</TableHead>
                         <TableHead className={`${tableStyles.person} text-center`}>User ID</TableHead>
                         <TableHead className={`${tableStyles.person} text-center`}>Employment Number</TableHead>
