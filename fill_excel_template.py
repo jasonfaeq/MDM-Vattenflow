@@ -128,7 +128,7 @@ async def export_excel(payload: dict):
             ws.cell(row=row, column=26, value=element.get('tgPhase', ''))
             ws.cell(row=row, column=27, value=element.get('projectSpec', ''))
             ws.cell(row=row, column=28, value=element.get('motherCode', ''))
-        with tempfile.NamedTemporaryFile(suffix='.xlsm', delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(suffix='.xlsm', delete=False, dir='/tmp') as tmp:
             wb.save(tmp.name)
             tmp.seek(0)
             excel_data = tmp.read()
