@@ -14,7 +14,7 @@ export interface ExportButtonProps {
 export function ExportButton({ wbsData, region, requestName, submissionDate }: ExportButtonProps) {
   const handleExport = async () => {
     try {
-      const response = await fetch('/api/export-wbs', {
+      const response = await fetch('http://127.0.0.1:8000/export', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

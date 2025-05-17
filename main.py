@@ -5,6 +5,7 @@ import os
 import tempfile
 import io
 from fill_excel_template import fill_excel_template
+import traceback
 
 app = FastAPI()
 
@@ -29,7 +30,7 @@ async def export_excel(payload: dict):
         template_path = os.path.join(os.path.dirname(__file__), 'templates', 'wbs_template_actual.xlsm')
         
         # Create a temporary file for the output
-        with tempfile.NamedTemporaryFile(suffix='.xlsm', delete=False, dir='/tmp') as tmp:
+        with tempfile.NamedTemporaryFile(suffix='.xlsm', delete=False) as tmp:
             # Fill the template with data
             fill_excel_template(template_path, tmp.name, wbs_data)
             
@@ -38,6 +39,7 @@ async def export_excel(payload: dict):
             excel_data = tmp.read()
             
             # Clean up the temporary file
+            tmp.close()
             os.unlink(tmp.name)
             
             # Return the Excel file as a download
@@ -47,6 +49,9 @@ async def export_excel(payload: dict):
                 headers={"Content-Disposition": "attachment; filename=wbs_export.xlsm"}
             )
     except Exception as e:
+        print("\n--- Exception in /export endpoint ---")
+        traceback.print_exc()
+        print("--- End Exception ---\n")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
