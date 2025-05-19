@@ -3,6 +3,7 @@ import { Download } from "lucide-react";
 import { StoredWBSData } from "@/types";
 import { toast } from "sonner";
 import type { RegionType } from "@/types";
+import { useState } from "react";
 
 export interface ExportButtonProps {
   wbsData: StoredWBSData[];
@@ -12,7 +13,9 @@ export interface ExportButtonProps {
 }
 
 export function ExportButton({ wbsData, region, requestName, submissionDate }: ExportButtonProps) {
+  const [loading, setLoading] = useState(false);
   const handleExport = async () => {
+    setLoading(true);
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
@@ -48,17 +51,27 @@ export function ExportButton({ wbsData, region, requestName, submissionDate }: E
     } catch (error) {
       console.error('Error exporting to Excel:', error);
       toast.error('Failed to export data');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <Button
-      onClick={handleExport}
-      variant="outline"
-      className="gap-2"
-    >
-      <Download className="h-4 w-4" />
-      Export to Excel
-    </Button>
+    <div>
+      <Button
+        onClick={handleExport}
+        variant="outline"
+        className="gap-2"
+        disabled={loading}
+      >
+        <Download className="h-4 w-4" />
+        {loading ? 'Exporting...' : 'Export to Excel'}
+      </Button>
+      {loading && (
+        <div style={{ marginTop: 8, color: '#555', fontSize: 14 }}>
+          Please wait for the file to be exported, don&apos;t leave this page.
+        </div>
+      )}
+    </div>
   );
 } 
