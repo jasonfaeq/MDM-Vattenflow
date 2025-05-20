@@ -32,13 +32,13 @@ const tableStyles = {
   tableContainer: "overflow-x-auto border rounded-lg",
   checkbox: "w-[50px] min-w-[50px] px-2",
   type: "w-[120px] min-w-[160px]",
-  controllingArea: "w-[180px] min-w-[180px]",
-  companyCode: "w-[150px] min-w-[150px]",
+  controllingArea: "w-[220px] min-w-[180px]",
+  companyCode: "w-[200px] min-w-[150px]",
   projectName: "w-[250px] min-w-[250px]",
-  projectDefinition: "w-[200px] min-w-[200px]",
+  projectDefinition: "w-[220px] min-w-[200px]",
   level: "w-[100px] min-w-[100px]",
-  responsiblePCCC: "w-[160px] min-w-[160px]",
-  investmentProfile: "w-[160px] min-w-[160px]",
+  responsiblePCCC: "w-[180px] min-w-[160px]",
+  investmentProfile: "w-[180px] min-w-[160px]",
   checkbox3Col: "w-[120px] min-w-[120px]",
   settlement: "w-[150px] min-w-[150px]",
   person: "w-[200px] min-w-[200px]",
@@ -48,7 +48,7 @@ const tableStyles = {
   motherCode: "w-[150px] min-w-[150px]",
   comment: "w-[200px] min-w-[200px]",
   projectType: "w-[120px] min-w-[120px]",
-  system: "w-[120px] min-w-[120px]",
+  system: "w-[140px] min-w-[120px]",
   projectProfile: "w-[160px] min-w-[160px]",
   tm1Project: "w-[150px] min-w-[150px]",
 } as const;
@@ -297,6 +297,8 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [selectedFields, setSelectedFields] = useState<(keyof WBSFormData)[]>([]);
   const [isMatchDialogOpen, setIsMatchDialogOpen] = useState(false);
+  const [isInfoDialogOpen, setIsInfoDialogOpen] = useState(false);
+  const [isTutorialDialogOpen, setIsTutorialDialogOpen] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -977,31 +979,128 @@ export default function WBSForm({ region, onSubmit, initialData }: WBSFormProps)
           <CardContent className="pt-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-medium">Main WBS Element</h3>
+              <div className="flex gap-2">
+
+                <Dialog open={isInfoDialogOpen} onOpenChange={setIsInfoDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsInfoDialogOpen(true)}
+                    >
+                      WBS Field Information
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="backdrop-blur-sm" style={{ width: 600, height: 600, maxWidth: '90vw', maxHeight: '90vh', borderRadius: 16, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center' }}>
+                    <DialogHeader>
+                      <DialogTitle>WBS Field Information</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4 w-full overflow-y-auto" style={{ flex: 1 }}>
+                      <p className="mb-4">Anything marked with an asterisk (*) in the table is mandatory.</p>
+                      <ul className="list-disc pl-6 space-y-2">
+                        <li><strong>Region / Language:</strong> English = standard + Netherlands, Sweden (Germany not yet). <em>Mandatory</em></li>
+                        <li><strong>Kind of Change (Type):</strong> Choose from list (e.g., New, Update, Lock, etc.). <em>Mandatory</em></li>
+                        <li><strong>System:</strong> Standard = KIS (choose from list). <em>Mandatory</em></li>
+                        <li><strong>Controlling Area:</strong> Choose from list per country. <em>Mandatory</em></li>
+                        <li><strong>Company Code:</strong> 4 digits. <em>Mandatory</em></li>
+                        <li><strong>Project Name:</strong> Maximum 40 letters. <em>Mandatory</em></li>
+                        <li><strong>Project Definition:</strong> Level 1: aa.00000000; Level 2-5: aa.00000000.0000. <em>Mandatory</em></li>
+                        <li><strong>Level:</strong> Level of the WBS element (1-5). <em>Mandatory</em></li>
+                        <li><strong>Project Type:</strong> Only NL & NO. <em>#N/A for others</em></li>
+                        <li><strong>Investment Profile:</strong> Only NL: for CAPEX. <em>Optional</em></li>
+                        <li><strong>Responsible Profit Center:</strong> 8 digits = 4 company code + 4 varying digits. <em>Mandatory</em></li>
+                        <li><strong>Responsible Cost Center:</strong> 8 digits = 4 company code + 4 varying digits. <em>Mandatory</em></li>
+                        <li><strong>Planning Element:</strong> You can only plan costs on a project that has been designated as a planning element. <em>Mandatory</em></li>
+                        <li><strong>Rubric Element:</strong> If you set this indicator, the project will be defined as an account assignment element. Actual postings can be made. <em>Mandatory</em></li>
+                        <li><strong>Billing Element:</strong> If you want to maintain a billing plan for a project, you must set this indicator. If you have maintained a billing plan for the project, you cannot change this indicator. <em>Mandatory</em></li>
+                        <li><strong>Settlement Rule %:</strong> Enter settlement percent (%) in this column. Total sum must be 100%. <em>Mandatory for OPEX project</em></li>
+                        <li><strong>Settlement Rule Goal:</strong> Enter project or internal order = goal of the settlement. <em>Mandatory for OPEX project</em></li>
+                        <li><strong>Project Profile:</strong> In case you know, provide; otherwise added by MDM. <em>Mandatory</em></li>
+                        <li><strong>Responsible Person:</strong> Name of manager or other responsible person. <em>#N/A</em></li>
+                        <li><strong>User ID:</strong> Only if new responsible person (to update project info). <em>#N/A</em></li>
+                        <li><strong>Employment Number:</strong> Only if new responsible person (to update project info). <em>#N/A</em></li>
+                        <li><strong>Functional Area:</strong> Only Nordic: Choose from list (Only for CC); processed by Vattenfall. <em>Mandatory</em></li>
+                        <li><strong>Comment:</strong> User field. <em>Optional</em></li>
+                        <li><strong>TM1 Project:</strong> TM1 project (user field). <em>Optional</em></li>
+                        <li><strong>TG Phase:</strong> TG phase (user field). <em>Optional</em></li>
+                        <li><strong>Project Spec (Project Specification):</strong> Project specification. If left blank, time recording is not possible. <em>Mandatory for BA Wind</em></li>
+                        <li><strong>Mother Code:</strong> WBS element mandatory if cross border recharging via Octopus is required. <em>Mandatory for BA Wind</em></li>
+                        <li><strong>Ins Program:</strong> Inv Program - only for project. <em>Only for BA Wind</em></li>
+                        <li><strong>Position ID:</strong> Position ID - only for project. <em>Only for BA Wind</em></li>
+                        <li><strong>Room:</strong> Mandatory for VNX. <em>Only for BU C&S Germany</em></li>
+                      </ul>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                <Dialog open={isTutorialDialogOpen} onOpenChange={setIsTutorialDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsTutorialDialogOpen(true)}
+                    >
+                      Request Form Tutorial
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="backdrop-blur-sm" style={{ width: 600, height: 600, maxWidth: '90vw', maxHeight: '90vh', borderRadius: 16, display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center' }}>
+                    <DialogHeader>
+                      <DialogTitle>How to Use the WBS Request App</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4 w-full overflow-y-auto" style={{ flex: 1 }}>
+                      <h2 className="text-lg font-semibold mb-2">Step-by-Step Tutorial</h2>
+                      <ol className="list-decimal pl-6 space-y-2 mb-4">
+                        <li>
+                          <strong>Fill in the Main WBS Element</strong> at the top of the form. This is the primary element for your request.
+                        </li>
+                        <li>
+                          If there are <strong>other elements</strong> in your request that require changes, click on <span className="font-semibold">Add WBS</span>.
+                        </li>
+                        <li>
+                          The new WBS element will <strong>copy the data</strong> you have already entered in the Main WBS Element, except for some fields.
+                        </li>
+                        <li>
+                          <span className="font-semibold">Please pay attention to:</span>
+                          <ul className="list-disc pl-6 mt-1">
+                            <li>Inputting a <strong>different Project Name</strong> and <strong>Project Definition</strong> for each additional WBS element.</li>
+                            <li>Possible changes in <strong>Level</strong> or <strong>Planning/Rubric/Billing elements</strong>.</li>
+                            <li>Updating the <strong>Mother Code</strong> if required.</li>
+                          </ul>
+                        </li>
+                      </ol>
+                      <p className="mb-2">You can use the <span className="font-semibold">Match Data from Main WBS</span> button to quickly copy selected fields from the main element to additional WBS elements.</p>
+                      <p className="mb-2">Once all required fields are filled, click <span className="font-semibold">Submit Request</span> to send your WBS request for processing.</p>
+                      <p className="text-muted-foreground">For more information about each field, use the <span className="font-semibold">WBS Field Information</span> button.</p>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
 
             <div className={tableStyles.tableContainer}>
               <Table className={tableStyles.table}>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[120px] min-w-[120px] text-center">Region</TableHead>
-                    <TableHead className={`${tableStyles.type} text-center`}>Type</TableHead>
-                    <TableHead className={`${tableStyles.system} text-center`}>System</TableHead>
-                    <TableHead className={`${tableStyles.controllingArea} text-center`}>Controlling Area</TableHead>
-                    <TableHead className={`${tableStyles.companyCode} text-center`}>Company Code</TableHead>
-                    <TableHead className={`${tableStyles.projectName} text-center`}>Project Name</TableHead>
-                    <TableHead className={`${tableStyles.projectDefinition} text-center`}>Project Definition</TableHead>
-                    <TableHead className={`${tableStyles.level} text-center`}>Level</TableHead>
-                    <TableHead className={`${tableStyles.projectType} text-center`}>Project Type</TableHead>
+                    <TableHead className="w-[120px] min-w-[120px] text-center">Region (*)</TableHead>
+                    <TableHead className={`${tableStyles.type} text-center`}>Type (*)</TableHead>
+                    <TableHead className={`${tableStyles.system} text-center`}>System (*)</TableHead>
+                    <TableHead className={`${tableStyles.controllingArea} text-center`}>Controlling Area (*)</TableHead>
+                    <TableHead className={`${tableStyles.companyCode} text-center`}>Company Code (*)</TableHead>
+                    <TableHead className={`${tableStyles.projectName} text-center`}>Project Name (*)</TableHead>
+                    <TableHead className={`${tableStyles.projectDefinition} text-center`}>Project Definition (*)</TableHead>
+                    <TableHead className={`${tableStyles.level} text-center`}>Level (*)</TableHead>
+                    <TableHead className={`${tableStyles.projectType} text-center`}>Project Type (*)</TableHead>
                     <TableHead className={`${tableStyles.investmentProfile} text-center`}>Investment Profile</TableHead>
-                    <TableHead className={`${tableStyles.responsiblePCCC} text-center`}>Responsible Profit Center</TableHead>
-                    <TableHead className={`${tableStyles.responsiblePCCC} text-center`}>Responsible Cost Center</TableHead>
+                    <TableHead className={`${tableStyles.responsiblePCCC} text-center`}>Responsible Profit Center (*)</TableHead>
+                    <TableHead className={`${tableStyles.responsiblePCCC} text-center`}>Responsible Cost Center (*)</TableHead>
                     <TableHead className={`${tableStyles.checkbox3Col} text-center`}>Planning Element</TableHead>
                     <TableHead className={`${tableStyles.checkbox3Col} text-center`}>Rubric Element</TableHead>
                     <TableHead className={`${tableStyles.checkbox3Col} text-center`}>Billing Element</TableHead>
                     {region === "NL" && (
                       <>
-                        <TableHead className={`${tableStyles.settlement} text-center`}>Settlement Rule %</TableHead>
-                        <TableHead className={`${tableStyles.settlement} text-center`}>Settlement Rule Goal</TableHead>
+                        <TableHead className={`${tableStyles.settlement} text-center`}>Settlement Rule % (*)</TableHead>
+                        <TableHead className={`${tableStyles.settlement} text-center`}>Settlement Rule Goal (*)</TableHead>
                       </>
                     )}
                     <TableHead className={`${tableStyles.projectProfile} text-center`}>Project Profile</TableHead>
