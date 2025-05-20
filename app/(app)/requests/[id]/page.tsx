@@ -356,8 +356,7 @@ export default function RequestDetailPage({
           <div className="flex justify-between items-start">
             <div>
               <CardTitle>
-                {request.requestType} - {request.region}
-                <span className="block text-lg font-normal mt-1">{request.requestName}</span>
+                {request.requestType} - {request.requestName}
               </CardTitle>
               <CardDescription>
                 Submitted on {formatDate(request.createdAt)}

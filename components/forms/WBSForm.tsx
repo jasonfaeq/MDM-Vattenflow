@@ -69,6 +69,9 @@ export type WbsTypeOptions =
 
 // Define the base WBS schema with proper types
 const baseWBSSchema = z.object({
+  region: z.string().min(1, "Required").or(z.enum(["DE", "NL", "SE", "DK", "UK"])),
+  type: z.string().min(1, "Required"),
+  system: z.string().min(1, "Required"),
   controllingArea: z.string().min(1, "Required"),
   companyCode: z.string().min(1, "Required"),
   projectName: z.string().min(1, "Required"),
@@ -95,19 +98,6 @@ const baseWBSSchema = z.object({
   projectSpec: z.string().optional(),
   motherCode: z.string().optional(),
   comment: z.string().optional(),
-  type: z.enum([
-    "New",
-    "Update",
-    "Update + Lock",
-    "Update + Unlock",
-    "Lock (only)",
-    "Unlock (only)",
-    "Close (only)",
-    "Complete Technically (only)",
-    "Update + Close"
-  ]),
-  system: z.string().optional(),
-  region: z.enum(["DE", "NL", "SE", "DK", "UK"]),
   projectProfile: z.string().optional(),
   tm1Project: z.string().optional(),
 }).superRefine((data, ctx) => {
@@ -118,6 +108,22 @@ const baseWBSSchema = z.object({
       code: z.ZodIssueCode.custom,
       message: "Functional Area is required for SE, DK, and UK.",
     });
+  }
+  if (region === "NL") {
+    if (!data.settlementRulePercent || data.settlementRulePercent.trim() === "") {
+      ctx.addIssue({
+        path: ["settlementRulePercent"],
+        code: z.ZodIssueCode.custom,
+        message: "Required",
+      });
+    }
+    if (!data.settlementRuleGoal || data.settlementRuleGoal.trim() === "") {
+      ctx.addIssue({
+        path: ["settlementRuleGoal"],
+        code: z.ZodIssueCode.custom,
+        message: "Required",
+      });
+    }
   }
 });
 

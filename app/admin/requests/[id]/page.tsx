@@ -531,78 +531,23 @@ export default function AdminRequestDetailPage({
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Admin - Request Management</h1>
         <div className="flex space-x-2">
-          {/* Only show ExportButton for WBS requests with array data */}
-          {request && request.requestType === 'WBS' && Array.isArray(request.submittedData) && (
-            (() => {
-              // Build exportData with controllingAreaLabel and other labels for each WBS element
-              const exportData = (request.submittedData.filter(isWBSRow) as StoredWBSData[]).map((wbs) => {
-                const controllingAreaOption = getControllingAreaOptions(request.region).find(option => option.value === wbs.controllingArea);
-                const controllingAreaLabel = controllingAreaOption ? controllingAreaOption.label : wbs.controllingArea;
-                const projectTypeOption = getProjectTypeOptions(request.region).find(option => option.value === (wbs.projectType || ""));
-                const projectTypeLabel = projectTypeOption ? projectTypeOption.label : wbs.projectType;
-                const functionalAreaOption = getFunctionalAreaOptions(request.region).find(option => option.value === (wbs.functionalArea || ""));
-                const functionalAreaLabel = functionalAreaOption ? functionalAreaOption.label : wbs.functionalArea;
-                const projectSpecOption = getProjectSpecOptions(request.region).find(option => option.value === (wbs.projectSpec || ""));
-                const projectSpecLabel = projectSpecOption ? projectSpecOption.label : wbs.projectSpec;
-                return {
-                  ...wbs,
-                  controllingArea: controllingAreaLabel,
-                  projectType: projectTypeLabel || "",
-                  functionalArea: functionalAreaLabel || "",
-                  projectSpec: projectSpecLabel || "",
-                  region: request.region,
-                  type: wbs.type as (
-                    | "New"
-                    | "Update"
-                    | "Update + Lock"
-                    | "Update + Unlock"
-                    | "Lock (only)"
-                    | "Unlock (only)"
-                    | "Close (only)"
-                    | "Complete Technically (only)"
-                    | "Update + Close"
-                  ),
-                };
-              });
-              return (
-                <ExportButton
-                  wbsData={exportData}
-                  requestName={request.requestName}
-                  submissionDate={(() => {
-                    const d = request.createdAt;
-                    let dateObj;
-                    if (d && typeof d === 'object' && 'toDate' in d) {
-                      dateObj = d.toDate();
-                    } else if (d && typeof d === 'object' && Object.prototype.toString.call(d) === '[object Date]') {
-                      dateObj = d;
-                    } else {
-                      dateObj = new Date();
-                    }
-                    const yyyy = dateObj.getFullYear();
-                    const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
-                    const dd = String(dateObj.getDate()).padStart(2, '0');
-                    return `${yyyy}${mm}${dd}`;
-                  })()}
-                />
-              );
-            })()
-          )}
           <Button asChild variant="outline">
             <Link href="/admin/dashboard">Back to Dashboard</Link>
           </Button>
         </div>
       </div>
 
+
+
       <Card>
         <CardHeader>
           <div className="flex justify-between items-start">
             <div>
               <CardTitle>
-                {request.requestType} - {request.region}
-                <span className="block text-lg font-normal mt-1">{request.requestName}</span>
+                {request.requestType} -  {request.requestName}
               </CardTitle>
               <CardDescription>
-                Submitted on {formatDate(request.createdAt)} by {request.requesterDisplayName || request.requesterEmail}
+                Submitted on {formatDate(request.createdAt)}
               </CardDescription>
             </div>
             <Badge variant={statusColors[request.status]}>
@@ -612,16 +557,23 @@ export default function AdminRequestDetailPage({
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium">Request ID</p>
-                <p className="font-mono">{request.id}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium">Last Updated</p>
-                <p>{formatDate(request.updatedAt)}</p>
-              </div>
+      {/* Request summary info, similar to user details page */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
+            <div>
+              <p className="text-sm font-medium">Request ID</p>
+              <p className="font-mono">{request.id}</p>
             </div>
+            <div>
+              <p className="text-sm font-medium">Requester</p>
+              <p>{request.requesterDisplayName || request.requesterEmail}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium">Regions</p>
+              <p>{request.requestType === 'WBS' && Array.isArray(request.submittedData) && request.submittedData.length > 0
+                ? Array.from(new Set((request.submittedData as StoredWBSData[]).map(wbs => wbs.region))).join(", ")
+                : request.region}</p>
+            </div>
+          </div>
 
             <div className="border-t pt-4">
               <h3 className="text-lg font-medium mb-4">Update Status</h3>
