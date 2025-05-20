@@ -13,7 +13,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import { Request, RequestStatus } from "@/types";
+import { Request, RequestStatus, WBSData } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -43,18 +43,35 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Trash2 } from "lucide-react";
+import { Trash2, Info } from "lucide-react";
 
 // Status color mapping
 const statusColors: Record<RequestStatus, "default" | "secondary" | "warning" | "success" | "destructive"> = {
   Submitted: "default",
-  InProgress: "secondary",
-  PendingInfo: "warning",
-  ForwardedToSD: "secondary",
+  "In Progress": "secondary",
   Completed: "success",
   Rejected: "destructive",
 };
+
+const statusDisplayMap: Record<string, string> = {
+  'In Progress': 'Progress',
+  PendingInfo: 'Pending',
+  ForwardedToSD: 'Forwarded',
+  Submitted: 'Submitted',
+  Completed: 'Completed',
+  Rejected: 'Rejected',
+};
+
+const statusExplanations = [
+  { label: "Submitted", desc: "The request has been submitted and is awaiting review." },
+  { label: "Progress", desc: "The request is currently being processed." },
+  { label: "Pending", desc: "The request is waiting for additional information or action." },
+  { label: "Forwarded", desc: "The request has been forwarded to another department or SD." },
+  { label: "Completed", desc: "The request has been completed successfully." },
+  { label: "Rejected", desc: "The request was reviewed and rejected." },
+];
 
 export default function AdminRequestsPage() {
   const { user } = useAuth();
@@ -112,12 +129,12 @@ export default function AdminRequestsPage() {
   const filteredRequests = requests.filter((request) => {
     const searchValue = searchTerm.toLowerCase();
     return (
-      request.id?.toLowerCase().includes(searchValue) ||
-      request.requestType.toLowerCase().includes(searchValue) ||
-      request.region.toLowerCase().includes(searchValue) ||
-      request.requesterEmail.toLowerCase().includes(searchValue) ||
-      request.status.toLowerCase().includes(searchValue) ||
-      request.requestName.toLowerCase().includes(searchValue)
+      (request.id ?? "").toLowerCase().includes(searchValue) ||
+      (request.requestType ?? "").toLowerCase().includes(searchValue) ||
+      (request.region ?? "").toLowerCase().includes(searchValue) ||
+      (request.requesterEmail ?? "").toLowerCase().includes(searchValue) ||
+      (request.status ?? "").toLowerCase().includes(searchValue) ||
+      (request.requestName ?? "").toLowerCase().includes(searchValue)
     );
   });
 
@@ -139,85 +156,99 @@ export default function AdminRequestsPage() {
   }
 
   return (
-    <div className="container mx-auto">
-      <div className="flex flex-col gap-4 mb-6">
-        <h1 className="text-2xl font-bold">All Requests (Admin)</h1>
-        <div className="flex items-center gap-4">
-          <Input
-            placeholder="Search by ID, type, region, name, requester..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-md"
-          />
-        </div>
-      </div>
-
-      {filteredRequests.length === 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>No requests found</CardTitle>
-            <CardDescription>
-              {searchTerm
-                ? "No requests match your search criteria."
-                : "There are no requests in the system yet."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {searchTerm && (
-              <Button variant="outline" onClick={() => setSearchTerm("")}>
-                Clear search
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>All Request History</CardTitle>
-            <CardDescription>
-              {filteredRequests.length} requests found
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <div>
+            <CardTitle>All Requests (Admin)</CardTitle>
+            <CardDescription>View and manage your MDM requests</CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4 mb-4">
+            <Input
+              placeholder="Search by ID, type, region, name, requester..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-md"
+            />
+          </div>
+          {filteredRequests.length === 0 ? (
+            <div className="py-8 text-center">
+              <p className="text-muted-foreground">
+                {searchTerm
+                  ? "No requests match your search criteria."
+                  : "There are no requests in the system yet."}
+              </p>
+              {searchTerm && (
+                <Button variant="outline" onClick={() => setSearchTerm("")} className="mt-4">
+                  Clear search
+                </Button>
+              )}
+            </div>
+          ) : (
             <Table>
               <TableCaption>All submitted requests</TableCaption>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Request ID</TableHead>
-                  <TableHead>Type</TableHead>
+                <TableRow className="bg-gradient-to-r from-[#ffe066] via-[#fffbe6] to-[#ffd600]">
+                  <TableHead className="w-72">Request ID</TableHead>
+                  <TableHead className="w-24">Type</TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead>Region</TableHead>
-                  <TableHead>Requester</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="w-56 text-center">Region</TableHead>
+                  <TableHead className="w-56 text-center">Requester</TableHead>
+                  <TableHead className="w-28 text-center flex items-center gap-1 justify-center">
+                    Status
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <button type="button" className="ml-1 text-muted-foreground hover:text-primary focus:outline-none">
+                          <Info className="inline h-4 w-4 align-text-bottom" aria-label="Status Info" />
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Status Explanations</DialogTitle>
+                        </DialogHeader>
+                        <ul className="space-y-2 mt-2">
+                          {statusExplanations.map((s) => (
+                            <li key={s.label}>
+                              <span className="font-semibold">{s.label}:</span> {s.desc}
+                            </li>
+                          ))}
+                        </ul>
+                      </DialogContent>
+                    </Dialog>
+                  </TableHead>
+                  <TableHead className="w-38 text-center">Created</TableHead>
+                  <TableHead className="w-38 text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredRequests.map((request) => (
                   <TableRow key={request.id}>
-                    <TableCell className="text-xs break-all w-64">{request.id}</TableCell>
+                    <TableCell className="w-72 font-normal text-base break-all">{request.id}</TableCell>
                     <TableCell>{request.requestType}</TableCell>
                     <TableCell>{request.requestName}</TableCell>
-                    <TableCell>{request.region}</TableCell>
-                    <TableCell>{request.requesterDisplayName || request.requesterEmail}</TableCell>
-                    <TableCell>
+                    <TableCell className="w-56 text-center align-middle font-normal text-base whitespace-nowrap">
+                      {Array.isArray(request.submittedData) && request.submittedData.length > 0 && 'controllingArea' in request.submittedData[0]
+                        ? Array.from(new Set((request.submittedData as WBSData[]).map((wbs) => wbs.region))).join(", ")
+                        : request.region}
+                    </TableCell>
+                    <TableCell className="w-56 text-center align-middle font-normal text-base whitespace-nowrap">
+                      {request.requesterDisplayName || request.requesterEmail}
+                    </TableCell>
+                    <TableCell className="w-28 text-center">
                       <Badge variant={statusColors[request.status]}>
-                        {request.status}
+                        {statusDisplayMap[request.status] || request.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{formatDate(request.createdAt)}</TableCell>
+                    <TableCell className="w-32 text-center">{formatDate(request.createdAt)}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" asChild>
-                          <Link href={`/admin/requests/${request.id}`}>
-                            Manage
-                          </Link>
+                          <Link href={`/admin/requests/${request.id}`}>Manage</Link>
                         </Button>
                         <Button variant="outline" size="sm" asChild>
-                          <Link href={`/admin/requests/${request.id}/edit`}>
-                            Edit
-                          </Link>
+                          <Link href={`/admin/requests/${request.id}/edit`}>Edit</Link>
                         </Button>
                         <Button
                           variant="outline"
@@ -236,9 +267,9 @@ export default function AdminRequestsPage() {
                 ))}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>

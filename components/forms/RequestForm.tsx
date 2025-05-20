@@ -28,7 +28,6 @@ import {
 import WBSForm from "./WBSForm";
 import PCCCForm from "./PCCCForm";
 import {
-  Region,
   Request,
   WBSData,
   PCCCData,
@@ -45,11 +44,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Info } from "lucide-react";
 
 const formSchema = z.object({
   requestType: z.string().min(1, "Request type is required"),
   requestName: z.string().min(1, "Request name is required"),
-  region: z.string().min(1, "Region is required"),
   submittedData: z.any(),
 });
 
@@ -78,12 +78,10 @@ export default function RequestForm({ initialData, onSubmitSuccess, isAdmin }: R
     defaultValues: initialData ? {
       requestType: initialData.requestType,
       requestName: initialData.requestName,
-      region: initialData.region,
       submittedData: initialData.submittedData,
     } : {
       requestType: "",
       requestName: "",
-      region: "",
       submittedData: {},
     },
   });
@@ -109,7 +107,6 @@ export default function RequestForm({ initialData, onSubmitSuccess, isAdmin }: R
         requesterEmail: user.email,
         requesterDisplayName: user.displayName,
         requestType: formValues.requestType as RequestType,
-        region: formValues.region as Region,
         requestName: formValues.requestName,
         status: "Submitted" as RequestStatus,
         updatedAt: serverTimestamp() as Timestamp,
@@ -172,7 +169,6 @@ export default function RequestForm({ initialData, onSubmitSuccess, isAdmin }: R
         requesterEmail: user.email,
         requesterDisplayName: user.displayName,
         requestType: formValues.requestType as RequestType,
-        region: formValues.region as Region,
         requestName: formValues.requestName,
         status: "Submitted" as RequestStatus,
         updatedAt: serverTimestamp() as Timestamp,
@@ -224,15 +220,15 @@ export default function RequestForm({ initialData, onSubmitSuccess, isAdmin }: R
     switch (formValues.requestType) {
       case "WBS":
         return <WBSForm 
-          region={formValues.region as Region} 
-          onSubmit={submitWBSRequest as any} // Type assertion to fix type mismatch
-          initialData={initialData?.submittedData as any} // Type assertion to fix type mismatch
+          onSubmit={submitWBSRequest}
+          initialData={initialData?.submittedData as WBSData[]}
+          requestName={formValues.requestName}
         />;
       case "PCCC":
         return <PCCCForm 
-          region={formValues.region as Region} 
           onSubmit={submitPCCCRequest}
           initialData={initialData?.submittedData as PCCCData[]}
+          region="DE"
         />;
       default:
         return null;
@@ -243,10 +239,19 @@ export default function RequestForm({ initialData, onSubmitSuccess, isAdmin }: R
     <div className="max-w-7xl mx-auto">
       <Card>
         <CardHeader>
-          <CardTitle>{initialData ? "Edit Request" : "New MDM Request"}</CardTitle>
-          <CardDescription>
-            {initialData ? "Update your request details" : "Submit a new request to the MDM team for processing"}
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>{initialData ? "Edit Request" : "New MDM Request"}</CardTitle>
+              <CardDescription>
+                {initialData ? "Update your request details" : "Submit a new request to the MDM team for processing"}
+              </CardDescription>
+            </div>
+            {step === 2 && (
+              <Button variant="outline" onClick={() => setStep(1)}>
+                Back
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {step === 1 ? (
@@ -261,7 +266,29 @@ export default function RequestForm({ initialData, onSubmitSuccess, isAdmin }: R
                     name="requestName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Request Name</FormLabel>
+                        <div className="flex items-center gap-2">
+                          <FormLabel className="mb-0">Request Name</FormLabel>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <button
+                                type="button"
+                                className="text-muted-foreground hover:text-primary focus:outline-none flex items-center justify-center bg-transparent"
+                                style={{ padding: 0, lineHeight: 1 }}
+                                tabIndex={0}
+                              >
+                                <Info className="h-4 w-4" aria-label="Request Name Info" />
+                              </button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-md">
+                              <DialogHeader>
+                                <DialogTitle>Request Name Guidance</DialogTitle>
+                              </DialogHeader>
+                              <div className="mt-2">
+                                Choose a name that is appropriate and unique for your request. It can be based off of your header element, or the region, or multiple factors.
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
                         <FormControl>
                           <Input placeholder="Enter request name" {...field} autoComplete="off" />
                         </FormControl>
@@ -293,34 +320,6 @@ export default function RequestForm({ initialData, onSubmitSuccess, isAdmin }: R
                       </FormItem>
                     )}
                   />
-
-                  <FormField
-                    control={form.control}
-                    name="region"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Region</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select region" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="DE">Germany (DE)</SelectItem>
-                            <SelectItem value="NL">Netherlands (NL)</SelectItem>
-                            <SelectItem value="SE">Sweden (SE)</SelectItem>
-                            <SelectItem value="DK">Denmark (DK)</SelectItem>
-                            <SelectItem value="UK">United Kingdom (UK)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </div>
 
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
@@ -330,20 +329,6 @@ export default function RequestForm({ initialData, onSubmitSuccess, isAdmin }: R
             </Form>
           ) : (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-medium">
-                    {formValues?.requestType} Request - {formValues?.region}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Fill in the required details below
-                  </p>
-                </div>
-                <Button variant="outline" onClick={() => setStep(1)}>
-                  Back
-                </Button>
-              </div>
-
               {renderFormByType()}
             </div>
           )}

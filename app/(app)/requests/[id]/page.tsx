@@ -19,7 +19,6 @@ import {
   Comment, 
   RequestStatus,
   StoredWBSData,
-  RegionType,
 } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -44,17 +43,10 @@ import {
 // Status color mapping
 const statusColors: Record<RequestStatus, "default" | "secondary" | "warning" | "success" | "destructive"> = {
   Submitted: "default",
-  InProgress: "secondary",
-  PendingInfo: "warning",
-  ForwardedToSD: "secondary",
+  "In Progress": "secondary",
   Completed: "success",
   Rejected: "destructive",
 };
-
-interface OptionType {
-  value: string;
-  label: string;
-}
 
 // Update type guard function
 function isWBSData(data: unknown): data is StoredWBSData[] {
@@ -68,6 +60,15 @@ const formatDate = (timestamp: Date | { toDate: () => Date } | null) => {
     return format(timestamp.toDate(), "dd MMM yyyy HH:mm");
   }
   return format(timestamp, "dd MMM yyyy HH:mm");
+};
+
+const statusDisplayMap: Record<string, string> = {
+  'In Progress': 'Progress',
+  PendingInfo: 'Pending',
+  ForwardedToSD: 'Forwarded',
+  Submitted: 'Submitted',
+  Completed: 'Completed',
+  Rejected: 'Rejected',
 };
 
 export default function RequestDetailPage({
@@ -190,43 +191,12 @@ export default function RequestDetailPage({
 
     // For bulk WBS, render a table
     if (isWBSData(data)) {
-      // Build exportData with controllingAreaLabel for each WBS element
-      const exportData = data.map((wbs) => {
-        const controllingAreaOption = getControllingAreaOptions(request.region as RegionType)
-          .find((option: OptionType) => option.value === wbs.controllingArea);
-
-        // Determine region label
-        let regionLabel = "";
-        if (request.region === "DE") regionLabel = "Germany";
-        else if (request.region === "NL") regionLabel = "Netherlands";
-        else regionLabel = "Nordic";
-
-        // Get the full project spec label
-        const projectSpecOption = getProjectSpecOptions(request.region as RegionType)
-          .find((option: OptionType) => option.value === wbs.projectSpec);
-        const projectSpecLabel = projectSpecOption ? projectSpecOption.label : wbs.projectSpec;
-
-        // Get the full functional area label
-        const functionalAreaOption = getFunctionalAreaOptions(request.region as RegionType)
-          .find((option: OptionType) => option.value === wbs.functionalArea);
-        const functionalAreaLabel = functionalAreaOption ? functionalAreaOption.label : wbs.functionalArea;
-
-        return {
-          ...wbs,
-          controllingAreaLabel: controllingAreaOption ? controllingAreaOption.label : wbs.controllingArea,
-          regionLabel,
-          requesterDisplayName: request.requesterDisplayName || request.requesterEmail,
-          projectSpec: projectSpecLabel,
-          functionalArea: functionalAreaLabel,
-        };
-      });
       return (
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <p className="font-medium">WBS Elements ({data.length} items)</p>
             <ExportButton 
-              wbsData={exportData} 
-              region={request.region as RegionType}
+              wbsData={data} 
               requestName={request.requestName}
               submissionDate={
                 (() => {
@@ -249,89 +219,75 @@ export default function RequestDetailPage({
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 sticky top-0 z-10">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Controlling Area</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company Code</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Name</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Definition</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Level</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Type</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Responsible PC/CC</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Planning Element</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rubric Element</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Billing Element</th>
-                  {request.region === "NL" && (
-                    <>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Settlement Rule %</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Settlement Rule Goal</th>
-                    </>
-                  )}
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Responsible Person</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User ID</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employment Number</th>
-                  {(request.region === "NL" || request.region === "SE" || request.region === "DK" || request.region === "UK") && (
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Functional Area</th>
-                  )}
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TG Phase</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Spec</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mother Code</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Comment</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Region</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Type</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">System</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Controlling Area</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Company Code</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Project Name</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Project Definition</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Level</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Project Type</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Investment Profile</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Responsible Profit Center</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Responsible Cost Center</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Planning Element</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Rubric Element</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Billing Element</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Settlement Rule %</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Settlement Rule Goal</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Project Profile</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">TM1 Project</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Responsible Person</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">User ID</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Employment Number</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Functional Area</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">TG Phase</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Project Spec</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Mother Code</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Comment</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {data.map((wbs, index) => {
-                  // Get the full controlling area label
-                  const controllingAreaOption = getControllingAreaOptions(request.region as RegionType)
-                    .find((option: OptionType) => option.value === wbs.controllingArea);
-                  const controllingAreaLabel = controllingAreaOption ? controllingAreaOption.label : wbs.controllingArea;
-
-                  // Get the full project type label
-                  const projectTypeOption = getProjectTypeOptions(request.region as RegionType)
-                    .find((option: OptionType) => option.value === wbs.projectType);
-                  const projectTypeLabel = projectTypeOption ? projectTypeOption.label : wbs.projectType;
-
-                  // Get the full functional area label for all supported regions
-                  const functionalAreaOption = (request.region === "NL" || request.region === "SE" || request.region === "DK" || request.region === "UK")
-                    ? getFunctionalAreaOptions(request.region as RegionType).find((option: OptionType) => option.value === wbs.functionalArea)
-                    : null;
-                  const functionalAreaLabel = functionalAreaOption ? functionalAreaOption.label : wbs.functionalArea;
-
-                  // Get the full project spec label
-                  const projectSpecOption = getProjectSpecOptions(request.region as RegionType)
-                    .find((option: OptionType) => option.value === wbs.projectSpec);
-                  const projectSpecLabel = projectSpecOption ? projectSpecOption.label : wbs.projectSpec;
-
+                  // Label helpers
+                  const controllingAreaLabel = getControllingAreaOptions(wbs.region).find(opt => opt.value === wbs.controllingArea)?.label || wbs.controllingArea;
+                  const projectTypeLabel = getProjectTypeOptions(wbs.region).find(opt => opt.value === wbs.projectType)?.label || wbs.projectType;
+                  const functionalAreaLabel = getFunctionalAreaOptions(wbs.region).find(opt => opt.value === wbs.functionalArea)?.label || wbs.functionalArea;
+                  const projectSpecLabel = getProjectSpecOptions(wbs.region).find(opt => opt.value === wbs.projectSpec)?.label || wbs.projectSpec;
+                  // Region label (optional: use a mapping for full name)
+                  const regionLabel = wbs.region;
                   return (
                     <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.type}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{controllingAreaLabel}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.companyCode}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.projectName}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.projectDefinition}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.level}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{projectTypeLabel}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.responsiblePCCC}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.planningElement ? 'Yes' : 'No'}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.rubricElement ? 'Yes' : 'No'}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.billingElement ? 'Yes' : 'No'}</td>
-                      {request.region === "NL" && (
-                        <>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.settlementRulePercent}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.settlementRuleGoal}</td>
-                        </>
-                      )}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.responsiblePerson}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.userId}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.employmentNumber}</td>
-                      {(request.region === "NL" || request.region === "SE" || request.region === "DK" || request.region === "UK") && (
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{functionalAreaLabel}</td>
-                      )}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.tgPhase}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{projectSpecLabel}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.motherCode}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wbs.comment}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 font-semibold">{regionLabel}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.type}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.system}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{controllingAreaLabel}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.companyCode}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.projectName}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.projectDefinition}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.level}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{projectTypeLabel}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.investmentProfile}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.responsibleProfitCenter}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.responsibleCostCenter}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.planningElement ? 'Yes' : 'No'}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.rubricElement ? 'Yes' : 'No'}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.billingElement ? 'Yes' : 'No'}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.settlementRulePercent}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.settlementRuleGoal}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.projectProfile}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.tm1Project}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.responsiblePerson}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.userId}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.employmentNumber}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{functionalAreaLabel}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.tgPhase}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{projectSpecLabel}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.motherCode}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.comment}</td>
                     </tr>
                   );
                 })}
@@ -408,13 +364,13 @@ export default function RequestDetailPage({
               </CardDescription>
             </div>
             <Badge variant={statusColors[request.status]}>
-              {request.status}
+              {statusDisplayMap[request.status] || request.status}
             </Badge>
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <p className="text-sm font-medium">Request ID</p>
                 <p className="font-mono">{request.id}</p>
@@ -422,6 +378,14 @@ export default function RequestDetailPage({
               <div>
                 <p className="text-sm font-medium">Requester</p>
                 <p>{request.requesterDisplayName || request.requesterEmail}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Regions</p>
+                <p>
+                  {isWBSData(request.submittedData) 
+                    ? Array.from(new Set(request.submittedData.map(wbs => wbs.region))).join(", ")
+                    : request.region}
+                </p>
               </div>
             </div>
 
@@ -436,7 +400,7 @@ export default function RequestDetailPage({
                 {request.history.map((entry, index) => (
                   <li key={index} className="flex justify-between">
                     <span>
-                      Status changed to <strong>{entry.status}</strong> by{" "}
+                      Status changed to <strong>{statusDisplayMap[entry.status] || entry.status}</strong> by{" "}
                       {entry.changedByUserName}
                     </span>
                     <span className="text-muted-foreground">

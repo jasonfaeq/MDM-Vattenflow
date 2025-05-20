@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Inter:wght@400;600&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -79,57 +80,27 @@
   --sidebar-accent-foreground: #1a2340;
   --sidebar-border: #e5e7eb;
   --sidebar-ring: #b3c6e0;
+  --font-logo: 'Montserrat', 'Inter', sans-serif;
 }
 
 body {
-  background: var(--background);
+  background: linear-gradient(135deg, #f6f8fa 0%, #e9eef6 100%);
+  font-family: var(--font-sans), 'Inter', sans-serif;
+  transition: background 0.4s, color 0.3s;
 }
 
-.card, .Card {
-  box-shadow: 0 4px 24px 0 rgba(0, 87, 184, 0.08);
+.card, .Card, .topbar {
+  box-shadow: 0 8px 32px 0 rgba(0, 87, 184, 0.10);
   border-radius: var(--radius-xl, 1.25rem);
-}
-
-.dark {
-  /* Dark mode - inverting some colors while maintaining brand identity */
-  --background: oklch(0.2 0.05 240); /* Dark Vattenfall blue */
-  --foreground: oklch(0.98 0.01 100);
-  --card: oklch(0.25 0.07 240);
-  --card-foreground: oklch(0.98 0.01 100);
-  --popover: oklch(0.25 0.07 240);
-  --popover-foreground: oklch(0.98 0.01 100);
-  --primary: oklch(0.85 0.15 85); /* Vattenfall yellow */
-  --primary-foreground: oklch(0.2 0.05 240);
-  --secondary: oklch(0.3 0.07 240);
-  --secondary-foreground: oklch(0.98 0.01 100);
-  --muted: oklch(0.3 0.05 240);
-  --muted-foreground: oklch(0.7 0.05 240);
-  --accent: oklch(0.85 0.15 85); /* Vattenfall yellow */
-  --accent-foreground: oklch(0.2 0.05 240);
-  --destructive: oklch(0.7 0.2 30);
-  --border: oklch(0.3 0.05 240);
-  --input: oklch(0.3 0.05 240);
-  --ring: oklch(0.5 0.05 240);
-  /* Chart colors - dark mode */
-  --chart-1: oklch(0.85 0.15 85); /* Vattenfall yellow */
-  --chart-2: oklch(0.7 0.1 240); /* Light blue */
-  --chart-3: oklch(0.75 0.1 85); /* Soft yellow */
-  --chart-4: oklch(0.5 0.1 240); /* Medium blue */
-  --chart-5: oklch(0.65 0.1 85); /* Muted yellow */
-  /* Sidebar dark mode */
-  --sidebar: oklch(0.25 0.07 240);
-  --sidebar-foreground: oklch(0.98 0.01 100);
-  --sidebar-primary: oklch(0.85 0.15 85);
-  --sidebar-primary-foreground: oklch(0.2 0.05 240);
-  --sidebar-accent: oklch(0.85 0.15 85);
-  --sidebar-accent-foreground: oklch(0.2 0.05 240);
-  --sidebar-border: oklch(0.3 0.05 240);
-  --sidebar-ring: oklch(0.5 0.05 240);
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(8px) saturate(1.2);
+  transition: box-shadow 0.3s, background 0.3s;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    transition: background 0.3s, color 0.3s, box-shadow 0.3s;
   }
   
   html {
@@ -144,8 +115,10 @@ body {
   }
 
   /* Headings */
-  h1, h2, h3, h4, h5, h6 {
+  h1, h2, h3, h4, h5, h6, .logo-text {
     @apply font-bold tracking-wide;
+    font-family: var(--font-logo);
+    letter-spacing: 0.01em;
   }
 
   h1 {
@@ -208,5 +181,34 @@ body {
   /* Table headers */
   th {
     @apply text-sm font-semibold tracking-wide uppercase;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--secondary);
+    color: var(--secondary-foreground);
+    box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
+    transition: background 0.3s, color 0.3s;
+  }
+
+  tr {
+    transition: background 0.2s;
+  }
+
+  tr:nth-child(even) {
+    background: var(--muted);
+  }
+
+  tr:hover {
+    background: var(--accent);
+    color: var(--accent-foreground);
+  }
+
+  a, button {
+    transition: color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.1s;
+  }
+
+  a:hover, button:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px) scale(1.03);
   }
 }

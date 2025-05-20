@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import {
   collection,
   query,
-  where,
   getDocs,
   orderBy,
   limit,
@@ -36,11 +35,9 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { AIService } from "@/lib/services/ai-service";
-import { useAuth } from "@/lib/auth";
 import { AiButton } from "@/components/ui/ai-button";
 
 export default function AdminDashboardPage() {
-  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalRequests: 0,
@@ -150,13 +147,22 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const statusColors: Record<string, string> = {
-    Submitted: "default",
-    InProgress: "secondary",
-    PendingInfo: "warning",
-    ForwardedToSD: "secondary",
+  // Unified status color and display mapping
+  const statusColors: Record<string, "info" | "warning" | "pending" | "forwardedToSD" | "success" | "rejected" | "default"> = {
+    Submitted: "info",
+    "In Progress": "warning",
+    PendingInfo: "pending",
+    ForwardedToSD: "forwardedToSD",
     Completed: "success",
-    Rejected: "destructive",
+    Rejected: "rejected",
+  };
+  const statusDisplayMap: Record<string, string> = {
+    'In Progress': 'Progress',
+    PendingInfo: 'Pending',
+    ForwardedToSD: 'Forwarded',
+    Submitted: 'Submitted',
+    Completed: 'Completed',
+    Rejected: 'Rejected',
   };
 
   return (
@@ -306,23 +312,20 @@ export default function AdminDashboardPage() {
                   <div key={request.id} className="p-4 hover:bg-muted/50">
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="font-medium flex items-center">
-                          {request.requestType} - {request.region}
+                        <div className="font-medium flex items-center gap-2">
+                          <span>WBS</span>
+                          <span>-</span>
+                          <span>{request.requestName}</span>
+                          <span>-</span>
                           <Badge
-                            className="ml-2"
-                            variant={statusColors[request.status] as any}
+                            className="ml-1"
+                            variant={statusColors[request.status] || "default"}
                           >
-                            {request.status}
+                            {statusDisplayMap[request.status] || request.status}
                           </Badge>
                         </div>
                         <div className="text-sm text-muted-foreground mt-1">
-                          {request.requestName}
-                        </div>
-                        <div className="text-sm text-muted-foreground mt-1">
-                          From {request.requesterEmail} ·{" "}
-                          {formatDistanceToNow(request.createdAt.toDate(), {
-                            addSuffix: true,
-                          })}
+                          From {request.requesterDisplayName || request.requesterEmail} - about {formatDistanceToNow(request.createdAt.toDate(), { addSuffix: true })}
                         </div>
                       </div>
                       <Button variant="ghost" size="icon" asChild>
@@ -376,23 +379,20 @@ export default function AdminDashboardPage() {
                     <div key={request.id} className="p-4 hover:bg-muted/50">
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="font-medium flex items-center">
-                            {request.requestType} - {request.region}
+                          <div className="font-medium flex items-center gap-2">
+                            <span>WBS</span>
+                            <span>-</span>
+                            <span>{request.requestName}</span>
+                            <span>-</span>
                             <Badge
-                              className="ml-2"
-                              variant={statusColors[request.status] as any}
+                              className="ml-1"
+                              variant={statusColors[request.status] || "default"}
                             >
-                              {request.status}
+                              {statusDisplayMap[request.status] || request.status}
                             </Badge>
                           </div>
                           <div className="text-sm text-muted-foreground mt-1">
-                            {request.requestName}
-                          </div>
-                          <div className="text-sm text-muted-foreground mt-1">
-                            From {request.requesterEmail} ·{" "}
-                            {formatDistanceToNow(request.createdAt.toDate(), {
-                              addSuffix: true,
-                            })}
+                            From {request.requesterDisplayName || request.requesterEmail} - about {formatDistanceToNow(request.createdAt.toDate(), { addSuffix: true })}
                           </div>
                         </div>
                         <Button variant="ghost" size="icon" asChild>

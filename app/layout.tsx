@@ -3,7 +3,6 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "sonner";
-import { ThemeProvider } from "next-themes";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,19 +19,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} h-full`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <AuthProvider>
-            <div className="h-full bg-background text-foreground">
-              {children}
-              <Toaster position="top-right" />
-            </div>
-          </AuthProvider>
-        </ThemeProvider>
+        <AuthProvider>
+          <div className="h-full bg-background text-foreground">
+            {children}
+            <Toaster position="top-right" />
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );

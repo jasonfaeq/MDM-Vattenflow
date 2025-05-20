@@ -4,17 +4,11 @@ export type UserRole = "Controller" | "MDM" | "Administrator";
 
 export type Region = "DE" | "NL" | "SE" | "DK" | "UK";
 
-export type RequestType = "WBS" | "PC" | "CC" | "PCCC" | "Modify" | "Lock" | "Unlock";
+export type RequestType = "WBS" | "PCCC";
 
-export type RequestStatus =
-  | "Submitted"
-  | "InProgress"
-  | "PendingInfo"
-  | "ForwardedToSD"
-  | "Completed"
-  | "Rejected";
+export type RequestStatus = "Submitted" | "In Progress" | "Completed" | "Rejected";
 
-export type RegionType = "DE" | "NL" | "SE" | "DK" | "UK";
+export type RegionType = Region;
 
 export interface Comment {
   userId: string;
@@ -43,24 +37,17 @@ export interface StoredBaseRequestData {
   region: Region;
 }
 
-export interface WBSData extends BaseRequestData {
-  type:
-    | "New"
-    | "Update"
-    | "Update + Lock"
-    | "Update + Unlock"
-    | "Lock (only)"
-    | "Unlock (only)"
-    | "Close (only)"
-    | "Complete Technically (only)"
-    | "Update + Close";
+export interface WBSData {
+  type: "New" | "Update" | "Update + Lock" | "Update + Unlock" | "Lock (only)" | "Unlock (only)" | "Close (only)" | "Complete Technically (only)" | "Update + Close";
   controllingArea: string;
   companyCode: string;
   projectName: string;
   projectDefinition: string;
   level: string;
   projectType: string;
-  responsiblePCCC: string;
+  investmentProfile?: string;
+  responsibleProfitCenter: string;
+  responsibleCostCenter: string;
   planningElement?: boolean;
   rubricElement?: boolean;
   billingElement?: boolean;
@@ -74,6 +61,12 @@ export interface WBSData extends BaseRequestData {
   projectSpec?: string;
   motherCode?: string;
   comment?: string;
+  system?: string;
+  region: Region;
+  projectProfile?: string;
+  tm1Project?: string;
+  startDate?: Date | null;
+  endDate?: Date | null;
 }
 
 export interface PCData extends BaseRequestData {
@@ -117,7 +110,11 @@ export interface LockUnlockData extends BaseRequestData {
   justification: string;
 }
 
-export type StoredWBSData = Omit<WBSData, 'startDate' | 'endDate'> & StoredBaseRequestData;
+export interface StoredWBSData extends Omit<WBSData, 'startDate' | 'endDate'> {
+  startDate: Timestamp | null;
+  endDate: Timestamp | null;
+}
+
 export type StoredPCData = Omit<PCData, 'startDate' | 'endDate'> & StoredBaseRequestData;
 export type StoredCCData = Omit<CCData, 'startDate' | 'endDate'> & StoredBaseRequestData;
 export type StoredPCCCData = Omit<PCCCData, 'startDate' | 'endDate'> & StoredBaseRequestData;

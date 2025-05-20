@@ -13,7 +13,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { useAuth } from "@/lib/auth";
-import { Request, Comment, RequestStatus } from "@/types";
+import { Request, Comment, RequestStatus, StoredWBSData, Region } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -43,55 +43,37 @@ import {
   getProjectSpecOptions,
 } from "@/components/forms/WBSForm";
 
-// Status color mapping
-const statusColors: Record<RequestStatus, "default" | "secondary" | "warning" | "success" | "destructive"> = {
-  Submitted: "default",
-  InProgress: "secondary",
-  PendingInfo: "warning",
-  ForwardedToSD: "secondary",
-  Completed: "success",
-  Rejected: "destructive",
-};
-
-// Define the StoredWBSData type for type assertion
-interface StoredWBSData {
-  type: string;
-  controllingArea: string;
-  companyCode: string;
-  projectName: string;
-  projectDefinition: string;
-  level: string;
-  responsiblePCCC: string;
-  planningElement?: boolean;
-  rubricElement?: boolean;
-  billingElement?: boolean;
-  projectType?: string;
-  region?: string;
-  functionalArea?: string;
-  projectSpec?: string;
-}
-
-// Type guard for StoredWBSData
-function isStoredWBSData(wbs: unknown): wbs is StoredWBSData {
+// Type guard for WBS data
+function isWBSRow(wbs: unknown): wbs is StoredWBSData {
   return (
     typeof wbs === "object" &&
     wbs !== null &&
-    "type" in wbs &&
     "controllingArea" in wbs &&
     "companyCode" in wbs &&
     "projectName" in wbs &&
     "projectDefinition" in wbs &&
     "level" in wbs &&
-    "responsiblePCCC" in wbs &&
-    "planningElement" in wbs &&
-    "rubricElement" in wbs &&
-    "billingElement" in wbs &&
     "projectType" in wbs &&
-    "region" in wbs &&
-    "functionalArea" in wbs &&
-    "projectSpec" in wbs
+    "region" in wbs
   );
 }
+
+// Status color mapping
+const statusColors: Record<RequestStatus, "default" | "secondary" | "warning" | "success" | "destructive"> = {
+  Submitted: "default",
+  "In Progress": "secondary",
+  Completed: "success",
+  Rejected: "destructive",
+};
+
+const statusDisplayMap: Record<string, string> = {
+  'In Progress': 'Progress',
+  PendingInfo: 'Pending',
+  ForwardedToSD: 'Forwarded',
+  Submitted: 'Submitted',
+  Completed: 'Completed',
+  Rejected: 'Rejected',
+};
 
 export default function AdminRequestDetailPage({
   params,
@@ -394,40 +376,105 @@ export default function AdminRequestDetailPage({
 
     // For bulk WBS, render a table
     if (Array.isArray(data)) {
+      // Only render WBS elements (with all WBS-specific properties)
+      const wbsData = data.filter(isWBSRow) as StoredWBSData[];
       return (
         <div className="space-y-4">
-          <p className="font-medium">WBS Elements ({data.length} items)</p>
+          <div className="flex justify-between items-center">
+            <p className="font-medium">WBS Elements ({wbsData.length} items)</p>
+            <ExportButton 
+              wbsData={wbsData} 
+              requestName={request.requestName}
+              submissionDate={(() => {
+                const d = request.createdAt;
+                let dateObj;
+                if (d && typeof d === 'object' && 'toDate' in d) {
+                  dateObj = d.toDate();
+                } else if (d && typeof d === 'object' && Object.prototype.toString.call(d) === '[object Date]') {
+                  dateObj = d;
+                } else {
+                  dateObj = new Date();
+                }
+                const yyyy = dateObj.getFullYear();
+                const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const dd = String(dateObj.getDate()).padStart(2, '0');
+                return `${yyyy}${mm}${dd}`;
+              })()}
+            />
+          </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 sticky top-0 z-10">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Controlling Area</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company Code</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Name</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Definition</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Level</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Responsible PC/CC</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Planning Element</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rubric Element</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Billing Element</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Region</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Type</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">System</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Controlling Area</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Company Code</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Project Name</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Project Definition</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Level</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Project Type</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Investment Profile</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Responsible Profit Center</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Responsible Cost Center</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Planning Element</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Rubric Element</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Billing Element</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Settlement Rule %</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Settlement Rule Goal</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Project Profile</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">TM1 Project</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Responsible Person</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">User ID</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Employment Number</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Functional Area</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">TG Phase</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Project Spec</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Mother Code</th>
+                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Comment</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {(data.filter(isStoredWBSData) as StoredWBSData[]).map((w: StoredWBSData, index: number) => (
-                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.type}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.controllingArea}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.companyCode}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.projectName}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.projectDefinition}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.level}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.responsiblePCCC}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.planningElement ? 'Yes' : 'No'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.rubricElement ? 'Yes' : 'No'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{w.billingElement ? 'Yes' : 'No'}</td>
-                  </tr>
-                ))}
+                {wbsData.map((wbs, index) => {
+                  // Label helpers
+                  const region = (wbs.region ?? 'DE') as Region;
+                  const controllingAreaLabel = getControllingAreaOptions(region).find(opt => opt.value === wbs.controllingArea)?.label || wbs.controllingArea;
+                  const projectTypeLabel = getProjectTypeOptions(region).find(opt => opt.value === wbs.projectType)?.label || wbs.projectType;
+                  const functionalAreaLabel = getFunctionalAreaOptions(region).find(opt => opt.value === wbs.functionalArea)?.label || wbs.functionalArea;
+                  const projectSpecLabel = getProjectSpecOptions(region).find(opt => opt.value === wbs.projectSpec)?.label || wbs.projectSpec;
+                  return (
+                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 font-semibold">{region}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.type}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.system ?? ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{controllingAreaLabel}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.companyCode ?? ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.projectName ?? ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.projectDefinition ?? ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.level ?? ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{projectTypeLabel}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.investmentProfile ?? ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.responsibleProfitCenter ?? ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.responsibleCostCenter ?? ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.planningElement ? 'Yes' : 'No'}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.rubricElement ? 'Yes' : 'No'}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.billingElement ? 'Yes' : 'No'}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.settlementRulePercent ?? ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.settlementRuleGoal ?? ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.projectProfile ?? ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.tm1Project ?? ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.responsiblePerson ?? ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.userId ?? ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.employmentNumber ?? ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{functionalAreaLabel}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.tgPhase ?? ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{projectSpecLabel}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.motherCode ?? ''}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{wbs.comment ?? ''}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -488,7 +535,7 @@ export default function AdminRequestDetailPage({
           {request && request.requestType === 'WBS' && Array.isArray(request.submittedData) && (
             (() => {
               // Build exportData with controllingAreaLabel and other labels for each WBS element
-              const exportData = (request.submittedData.filter(isStoredWBSData) as StoredWBSData[]).map((wbs) => {
+              const exportData = (request.submittedData.filter(isWBSRow) as StoredWBSData[]).map((wbs) => {
                 const controllingAreaOption = getControllingAreaOptions(request.region).find(option => option.value === wbs.controllingArea);
                 const controllingAreaLabel = controllingAreaOption ? controllingAreaOption.label : wbs.controllingArea;
                 const projectTypeOption = getProjectTypeOptions(request.region).find(option => option.value === (wbs.projectType || ""));
@@ -520,7 +567,6 @@ export default function AdminRequestDetailPage({
               return (
                 <ExportButton
                   wbsData={exportData}
-                  region={request.region}
                   requestName={request.requestName}
                   submissionDate={(() => {
                     const d = request.createdAt;
@@ -560,7 +606,7 @@ export default function AdminRequestDetailPage({
               </CardDescription>
             </div>
             <Badge variant={statusColors[request.status]}>
-              {request.status}
+              {statusDisplayMap[request.status] || request.status}
             </Badge>
           </div>
         </CardHeader>
@@ -592,11 +638,9 @@ export default function AdminRequestDetailPage({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Submitted">Submitted</SelectItem>
-                      <SelectItem value="InProgress">In Progress</SelectItem>
-                      <SelectItem value="PendingInfo">Pending Info</SelectItem>
-                      <SelectItem value="ForwardedToSD">
-                        Forwarded to SD
-                      </SelectItem>
+                      <SelectItem value="InProgress">Progress</SelectItem>
+                      <SelectItem value="PendingInfo">Pending</SelectItem>
+                      <SelectItem value="ForwardedToSD">Forwarded</SelectItem>
                       <SelectItem value="Completed">Completed</SelectItem>
                       <SelectItem value="Rejected">Rejected</SelectItem>
                     </SelectContent>
@@ -766,7 +810,7 @@ export default function AdminRequestDetailPage({
                       <span>
                         Status changed to{" "}
                         <Badge variant={statusColors[entry.status]}>
-                          {entry.status}
+                          {statusDisplayMap[entry.status] || entry.status}
                         </Badge>{" "}
                         by {entry.changedByUserName}
                       </span>
