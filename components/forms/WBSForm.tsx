@@ -132,7 +132,7 @@ const formSchema = z.object({
 });
 
 type FormValues = z.infer<typeof formSchema>;
-type WBSFormData = z.infer<typeof baseWBSSchema>;
+export type WBSFormData = z.infer<typeof baseWBSSchema>;
 
 interface WBSFormProps {
   onSubmit: (data: WBSFormData[]) => Promise<void>;

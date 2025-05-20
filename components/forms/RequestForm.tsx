@@ -25,16 +25,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import WBSForm from "./WBSForm";
+import WBSForm, { WBSFormData } from "./WBSForm";
 import PCCCForm from "./PCCCForm";
 import {
   Request,
-  WBSData,
   PCCCData,
   StoredWBSData,
   StoredPCCCData,
   RequestType,
   RequestStatus,
+  Region,
 } from "@/types";
 import {
   Card,
@@ -91,15 +91,17 @@ export default function RequestForm({ initialData, onSubmitSuccess, isAdmin }: R
     setStep(2);
   };
 
-  const submitWBSRequest = async (data: WBSData[]) => {
+  const submitWBSRequest = async (data: WBSFormData[]) => {
     if (!user || !formValues) return;
 
     setIsSubmitting(true);
     try {
-      const convertDates = (data: WBSData): StoredWBSData => ({
+      const convertDates = (data: WBSFormData): StoredWBSData => ({
         ...data,
-        startDate: data.startDate instanceof Date ? Timestamp.fromDate(data.startDate) : null,
-        endDate: data.endDate instanceof Date ? Timestamp.fromDate(data.endDate) : null,
+        type: data.type as StoredWBSData["type"],
+        region: data.region as Region,
+        startDate: null,
+        endDate: null,
       });
 
       const requestData = {
@@ -221,7 +223,7 @@ export default function RequestForm({ initialData, onSubmitSuccess, isAdmin }: R
       case "WBS":
         return <WBSForm 
           onSubmit={submitWBSRequest}
-          initialData={initialData?.submittedData as WBSData[]}
+          initialData={initialData?.submittedData as WBSFormData[]}
           requestName={formValues.requestName}
         />;
       case "PCCC":
