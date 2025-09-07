@@ -34,12 +34,13 @@ Traditional workflows for WBS and Cost Center management often rely on Excel tem
 ![Create Request](./Screenshots/Create-Request.png)
 
 ### 🪟 Request Overview & Excel Export
+![Request View](./Screenshots/Request-View.png)
 
 ### 🛠️ Admin Panel – Homepage  
 ![Admin Panel](./Screenshots/Admin-Panel.png)
 
 ### 🛠️ Admin Panel – Request Management  
-![Admin Panel](./Screenshots/Admin-Panel%20Requests.png)
+![Admin Panel - Request Management](./Screenshots/Admin-Panel%20Requests.png)
 
 ### 📊 AI-Powered Analytics (Prototype)  
 ![AI Analysis](./Screenshots/AI-Analysis.png)
