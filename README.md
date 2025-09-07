@@ -34,7 +34,6 @@ Traditional workflows for WBS and Cost Center management often rely on Excel tem
 ![Create Request](./Screenshots/Create-Request.png)
 
 ### 🪟 Request Overview & Excel Export
-![Create Request](./Screenshots/Request%20View.png)
 
 ### 🛠️ Admin Panel – Homepage  
 ![Admin Panel](./Screenshots/Admin-Panel.png)
