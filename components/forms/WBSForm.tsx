@@ -145,44 +145,25 @@ export const getControllingAreaOptions = (region: RegionType) => {
   switch (region) {
     case "DE":
       return [
-        { value: "6000", label: "6000 Vattenfall Holding" },
-        { value: "6010", label: "6010 Waste" },
-        { value: "6017", label: "6017 Holding Beteiligungen" },
-        { value: "6018", label: "6018 Kernkraftwerke" },
-        { value: "6100", label: "6100 Heat Beteiligungen" },
-        { value: "6200", label: "6200 Service Unit" },
-        { value: "6204", label: "6204 VASA" },
-        { value: "6205", label: "6205 Windkraft GmbH" },
-        { value: "6250", label: "6250 Distribution" },
-        { value: "6300", label: "6300 Wärme AG" },
-        { value: "6500", label: "6500 Sales" },
+        { value: "5123", label: "Holding" },
+        { value: "2574", label: "Waste" },
+        { value: "5321", label: "Holding Beteiligungen" },
+        { value: "3123", label: "Kernkraftwerke" },
       ];
     case "NL":
       return [
-        { value: "5000", label: "5000 CO-gebied Vattenfall NL" },
-        { value: "5002", label: "5002 CO-gebied Netbeheer" },
-        { value: "5003", label: "5003 CO-gebied overig" },
+        { value: "4213", label: "Vattenfall" },
+        { value: "6754", label: "Netbeheer" },
+        { value: "2342", label: "Overig" },
       ];
     case "SE":
     case "DK":
     case "UK":
       return [
-        { value: "1XX", label: "1XX SLR within Vattenfall AB" },
-        { value: "2036", label: "2036 Vf Services Nordic AB" },
-        { value: "2052", label: "2052 Vf BusinessServicesNord." },
-        { value: "207X", label: "207X Nuclear plant D21" },
-        { value: "20XX", label: "20XX Subsidiary EUR" },
-        { value: "21XX", label: "21XX Vattenfall Hydro" },
-        { value: "22XX", label: "22XX Subsidiary SEK" },
-        { value: "23XX", label: "23XX Subsidiary GBP" },
-        { value: "2453", label: "2453 Forsmarks Kraftgrupp AB" },
-        { value: "2460", label: "2460 Vattenfall Nuclear Fuel A" },
-        { value: "25XX", label: "25XX Business Area Grid" },
-        { value: "298X", label: "298X Subsidiary DKK" },
-        { value: "3100", label: "3100 Associated company SEK" },
-        { value: "3300", label: "3300 Associated company Euro" },
-        { value: "8120", label: "8120 VAB Mega Branch Norway" },
-        { value: "9901", label: "9901 External companies DK" },
+        { value: "521", label: "Vattenfall AB" },
+        { value: "6474", label: "2Nordic AB" },
+        { value: "3321", label: "BusinessServices." },
+        { value: "4211", label: "Nuclear plant" }
       ];
     default:
       return [];
@@ -195,32 +176,10 @@ export const getFunctionalAreaOptions = (region: RegionType) => {
     case "DK":
     case "UK":
       return [
-        { value: "4010", label: "4010 OPC Oper & mainte" },
-        { value: "4015", label: "4015 MAC Maint/distr" },
-        { value: "4017", label: "4017 MAC Maint/distri extra" },
-        { value: "4018", label: "4018 MAC Breakdown" },
-        { value: "4020", label: "4020 Fuel" },
-        { value: "4030", label: "4030 Fees and taxes" },
-        { value: "4125", label: "4125 Bilateral purchase," },
-        { value: "4135", label: "4135 Bilateral purchase," },
-        { value: "4200", label: "4200 Transmission costs" },
-        { value: "4220", label: "4220 Purch. for re-sel gas/oil" },
-        { value: "4230", label: "4230 CON Cost of contr work" },
-        { value: "4235", label: "4235 ECW Cost of consulting" },
-        { value: "4240", label: "4240 ODC Other direct costs" },
-        { value: "4280", label: "4280 COP Cost of other produc" },
-        { value: "4285", label: "4285 ODC Oth operating expe" },
-        { value: "4400", label: "4400 COP Thermal purchase" },
-        { value: "4510", label: "4510 RAD Research & Develop" },
-        { value: "4511", label: "4511 RAD R&D Renewable teknik" },
-        { value: "4513", label: "4513 RAD Other R&D" },
-        { value: "4515", label: "4515 RAD R&D new prod & serv" },
-        { value: "4520", label: "4520 SEO Selling expen" },
-        { value: "4522", label: "4522 CMR Cost Measur/repor" },
-        { value: "4525", label: "4525 ADM Admin exp" },
-        { value: "1810", label: "1810 INV Investments" },
-        { value: "1810M", label: "1810 INV Maint. Invest" },
-        { value: "1850", label: "1850 Expand Investments" },
+        { value: "1235", label: "OPC Oper & mainte" },
+        { value: "2211", label: "MAC Maint/distr" },
+        { value: "5321", label: "MAC Maint/distri extra" },
+        { value: "1121", label: "MAC Breakdown" },
       ];
     case "DE":
       return [
