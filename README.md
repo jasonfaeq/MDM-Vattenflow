@@ -20,22 +20,30 @@ Traditional workflows for WBS and Cost Center management often rely on Excel tem
 - Automated request tracking
 - Excel-compatible export with macro-safe templates
 - Real-time status updates between Controllers and Admins
+- Export to a standardized, formatted Excel template.
 
 ---
 
 ## 📸 Screenshots
 
-### 🧾 My Requests – Controller Dashboard  
-![My Requests](./docs/My-Requests.png)
+
+### 🧾 My Requests – Controller Homepage  
+![My Requests](./Screenshots/Homepage.png)
 
 ### ➕ Create New Request  
-![Create Request](./docs/Create-Request.png)
+![Create Request](./Screenshots/Create-Request.png)
+
+### 🪟 Request Overview & Excel Export
+![Create Request](./Screenshots/Request%20View.png)
+
+### 🛠️ Admin Panel – Homepage  
+![Admin Panel](./Screenshots/Admin-Panel.png)
 
 ### 🛠️ Admin Panel – Request Management  
-![Admin Panel](./docs/Admin-Panel.png)
+![Admin Panel](./Screenshots/Admin-Panel%20Requests.png)
 
 ### 📊 AI-Powered Analytics (Prototype)  
-![AI Analysis](./docs/AI-Analysis.png)
+![AI Analysis](./Screenshots/AI-Analysis.png)
 
 ---
 
